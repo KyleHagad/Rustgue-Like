@@ -1,0 +1,8 @@
+{
+  "editor.cursorBlinking": "smooth",
+
+  "cSpell.diagnosticLevel": "Hint",
+  "cSpell.userWords" : [
+    "rltk",
+  ],
+}
