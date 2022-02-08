@@ -8,3 +8,5 @@ edition = "2021"
 
 [dependencies]
 rltk = { version = "0.8.1" }
+specs = "0.17.0"
+specs-derive = "0.4.1"
