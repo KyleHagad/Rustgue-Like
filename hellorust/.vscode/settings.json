@@ -1,8 +1,0 @@
-{
-  "editor.cursorBlinking": "smooth",
-
-  "cSpell.diagnosticLevel": "Hint",
-  "cSpell.userWords" : [
-    "renderable", "renderables", "rltk",
-  ],
-}
