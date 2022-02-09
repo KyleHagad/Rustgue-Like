@@ -1,38 +1,38 @@
 use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
-use specs_derive::Component;
 
-// import components
-mod components;
-// make its public contents available
-pub use components::*;
+
+mod components; // import components
+pub use components::*; // make its public contents available
 mod map;
 pub use map::*;
 mod player;
 pub use player::*;
 mod rect;
 pub use rect::Rect;
-
-#[derive(Component)]
-struct LeftMover {}
+mod visibility_system;
+use visibility_system::VisibilitySystem;
 
 pub struct State {
     ecs: World,
 }
 
-//  GameState is a trait implemented on State ⚵
-impl GameState for State {
-    //  Tick is a method on the trait GameState
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
+
+impl GameState for State {//  GameState is a trait implemented on State
     fn tick(&mut self, ctx: &mut Rltk) {
-        // '&' is a reference to the original; 'mut' is a mutable reference
         ctx.cls();
 
+        player_input(self, ctx);
         self.run_systems();
 
-        player_input(self, ctx);
-
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -40,12 +40,6 @@ impl GameState for State {
         for (pos, render) in (&positions, &renderables).join() {
             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
         }
-    }
-}
-
-impl State {
-    fn run_systems(&mut self) {
-        self.ecs.maintain();
     }
 }
 
@@ -61,10 +55,11 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
+    gs.ecs.register::<Viewshed>();
 
-    let (rooms, map) = new_map_rooms_and_corridors();
+    let map : Map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
     gs.ecs.insert(map);
-    let (player_x, player_y) = rooms[0].center();
 
     gs.ecs
         .create_entity()
@@ -75,6 +70,7 @@ fn main() -> rltk::BError {
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player {})
+        .with(Viewshed{visible_tiles : Vec::new(), range: 8, dirty: true })
         .build();
 
     rltk::main_loop(context, gs) //  Calls into the `rltk` namespace to activate `main_loop

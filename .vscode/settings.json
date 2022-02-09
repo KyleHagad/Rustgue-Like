@@ -4,6 +4,8 @@
   "cSpell.diagnosticLevel": "Warning",
   "cSpell.words" : [
     "Renderable",
-    "rltk"
+    "rltk",
+    "Viewshed",
+    "viewsheds"
   ],
 }
