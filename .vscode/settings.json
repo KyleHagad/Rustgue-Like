@@ -3,8 +3,10 @@
 
   "cSpell.diagnosticLevel": "Warning",
   "cSpell.words" : [
+    "ppos",
     "Renderable",
     "rltk",
+    "runstate",
     "Viewshed",
     "viewsheds"
   ],
