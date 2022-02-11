@@ -3,12 +3,22 @@
 
   "cSpell.diagnosticLevel": "Warning",
   "cSpell.words" : [
+    "DARKSLATEGREY",
+    "gamelog",
+    "LIGHTPINK",
+    "MAPCOUNT",
+    "MAPHEIGHT",
     "mapindex",
+    "MAPWIDTH",
+    "MEDIUMVIOLETRED",
+    "newrunstate",
     "pathing",
     "ppos",
     "Renderable",
     "rltk",
     "runstate",
+    "runwriter",
+    "scanlines",
     "Viewshed",
     "viewsheds"
   ],

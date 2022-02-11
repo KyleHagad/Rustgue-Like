@@ -24,6 +24,7 @@ mod gui;
 pub use gui::*;
 mod gamelog;
 pub use gamelog::*;
+mod spawner;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
@@ -102,6 +103,10 @@ fn main() -> rltk::BError {
     let context = RltkBuilder::simple80x50()
         .with_title("Rust Rouge Rogue")
         .build()?;
+    // let mut context = RltkBuilder::simple80x50()
+    //     .with_title("Rust Rouge Rogue")
+    //     .build()?;
+    // context.with_post_scanlines(true);
     // Create a game-state
     let mut gs = State {
         ecs: World::new()
@@ -122,51 +127,19 @@ fn main() -> rltk::BError {
     let (player_x, player_y) = map.rooms[0].center();
 
     // Monster Spawner
-    let mut rng = RandomNumberGenerator::new();
-    for (i,room) in map.rooms.iter().skip(1).enumerate() {
-        let (x,y) = room.center();
-        let glyph : rltk::FontCharType;
-        let name : String;
-        let roll = rng.roll_dice(1,2);
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
 
-        match roll {
-            1 => { glyph = rltk::to_cp437('O'); name = "Orc".to_string(); }
-            _ => { glyph = rltk::to_cp437('G'); name = "Goblin".to_string(); }
-            // 1 => { glyph = rltk::to_cp437('▲') }
-            // _ => { glyph = rltk::to_cp437('▼') }
-        }
-        gs.ecs.create_entity()
-            .with(Position { x, y })
-            .with(Renderable {
-                glyph,
-                fg: RGB::named(rltk::MAGENTA),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
-            .with(Monster{})
-            .with(Name{ name: format!("{} #{}", &name, i) })
-            .with(BlocksTile{})
-            .with(CombatStats{ max_hp: 16, hp: 16, defense: 1, power: 4 })
-            .build();
+    for room in map.rooms.iter().skip(1) {
+        let (x,y) = room.center();
+        spawner::random_monster(&mut gs.ecs, x,y);
     }
 
-    let player_entity = gs.ecs
-        .create_entity()
-        .with(Position { x: player_x, y: player_y })
-        .with(Renderable {
-            glyph: rltk::to_cp437('⌂'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(Player {})
-        .with(Viewshed{visible_tiles : Vec::new(), range: 8, dirty: true })
-        .with(Name{ name: "Player".to_string() })
-        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
-        .build();
+    let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
 
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(GameLog{ entries : vec!["Gathering mana...".to_string()]});
 

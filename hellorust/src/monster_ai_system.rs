@@ -16,7 +16,9 @@ impl<'a> System<'a> for MonsterAI {
                         WriteStorage<'a, DoesMelee> );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, player_entity, run_state, entities, mut viewshed, monster, mut position, mut does_melee) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut does_melee) = data;
+
+        if *runstate != RunState::MonsterTurn { return; }
 
         for (entity, mut viewshed, _monster, mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
             let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);

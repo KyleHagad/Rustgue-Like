@@ -1,17 +1,17 @@
 use specs::prelude::*;
-use super::{ CombatStats, DoesMelee, Name, SufferDamage };
-use rltk::{ console };
+use super::{ CombatStats, DoesMelee, Name, SufferDamage, GameLog };
 
 pub struct MeleeCombatSystem {}
 impl <'a> System<'a> for MeleeCombatSystem {
     type SystemData = ( Entities<'a>,
+                        WriteExpect<'a, GameLog>,
                         WriteStorage<'a, DoesMelee>,
                         ReadStorage<'a, Name>,
                         ReadStorage<'a, CombatStats>,
                         WriteStorage<'a, SufferDamage> );
 
     fn run(&mut self, data : Self::SystemData) {
-        let(entities, mut does_melee, names, combat_stats, mut inflict_damage) = data;
+        let(entities, mut log, mut does_melee, names, combat_stats, mut inflict_damage) = data;
 
         for (_entity, does_melee, name, stats) in (&entities, &does_melee, &names, &combat_stats).join() {
             if stats.hp > 0 {
@@ -22,9 +22,9 @@ impl <'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, stats.power - target_stats.defense);
 
                     if damage == 0 {
-                        console::log(&format!("{} cannot be touched by {}", &target_name.name, &name.name));
+                        log.entries.push(format!("{} cannot be touched by {}", &target_name.name, &name.name));
                     } else {
-                        console::log(&format!("{} hugs {} for {} seconds", &name.name, &target_name.name, damage));
+                        log.entries.push(format!("{} hugs {} for {} seconds", &name.name, &target_name.name, damage));
                         SufferDamage::new_damage(&mut inflict_damage, does_melee.target, damage);
                     }
                 }
