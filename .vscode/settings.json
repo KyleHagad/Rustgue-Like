@@ -4,6 +4,7 @@
   "cSpell.diagnosticLevel": "Warning",
   "cSpell.words" : [
     "DARKSLATEGREY",
+    "equippable",
     "gamelog",
     "LIGHTPINK",
     "MAPCOUNT",
@@ -13,6 +14,7 @@
     "MEDIUMVIOLETRED",
     "newrunstate",
     "pathing",
+    "picksup",
     "ppos",
     "Renderable",
     "rltk",
