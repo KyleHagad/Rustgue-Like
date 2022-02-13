@@ -20,6 +20,7 @@
     "rltk",
     "runstate",
     "runwriter",
+    "Saveload",
     "scanlines",
     "Viewshed",
     "viewsheds"
