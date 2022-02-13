@@ -1,5 +1,7 @@
 use specs::prelude::*;
-use super::{ WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToDrinkPotion, Potion, CombatStats, WantsToDropItem };
+use super::{Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map,
+            WantsToPickupItem, WantsToUseItem, WantsToDropItem, SufferDamage,
+            Consumable, ProvidesHealing, InflictsDamage };
 
 pub struct ItemCollectionSystem {}
 impl<'a> System<'a> for ItemCollectionSystem {
@@ -27,35 +29,70 @@ impl<'a> System<'a> for ItemCollectionSystem {
     }
 }
 
-pub struct PotionUseSystem {}
-impl<'a> System<'a> for PotionUseSystem {
+pub struct ItemUseSystem {}
+impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( ReadExpect<'a, Entity>,
                         WriteExpect<'a, GameLog>,
                         Entities<'a>,
-                        WriteStorage<'a, WantsToDrinkPotion>,
+                        WriteStorage<'a, WantsToUseItem>,
                         ReadStorage<'a, Name>,
-                        ReadStorage<'a, Potion>,
-                        WriteStorage<'a, CombatStats> );
+                        ReadExpect<'a, Map>,
+                        ReadStorage<'a, Consumable>,
+                        ReadStorage<'a, InflictsDamage>,
+                        ReadStorage<'a, ProvidesHealing>,
+                        WriteStorage<'a, CombatStats>,
+                        WriteStorage<'a, SufferDamage>    );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut potion_drinker, names, potions, mut combat_stats) = data;
+        let (   player_entity, mut gamelog, entities, mut using_item, names, map,
+                consumables, inflict_damage, healing, mut combat_stats, mut suffer_damage
+            ) = data;
 
-        for (entity, drink, stats) in (&entities, &potion_drinker, &mut combat_stats).join() {
-            let potion = potions.get(drink.potion);
-            match potion {
+        for (entity, useitem, stats) in (&entities, &using_item, &mut combat_stats).join() {
+            let mut used_item = true;
+
+            let item_damages = inflict_damage.get(useitem.item);
+            match item_damages {
                 None => {}
-                Some(potion) => {
-                    stats.hp = i32::min(stats.max_hp, stats.hp + potion.heal_amount);
-                    if entity == *player_entity {
-                        gamelog.entries.push(format!("You eat the {}, restoring {} HP.", names.get(drink.potion).unwrap().name, potion.heal_amount));
+                Some(damage) => {
+                    let target_point = useitem.target.unwrap();
+                    let idx = map.xy_idx(target_point.x, target_point.y);
+                    used_item = false;
+                    for mob in map.tile_content[idx].iter() {
+                        SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
+                        if entity == *player_entity {
+                            let mob_name = names.get(*mob).unwrap();
+                            let item_name = names.get(useitem.item).unwrap();
+                            gamelog.entries.push(format!("You use the {} on the {}, inflicting {} damage.", item_name.name, mob_name.name, damage.damage));
+                        }
+
+                        used_item = true;
                     }
-                    entities.delete(drink.potion).expect("delete failed");
+                }
+            }
+
+            let item_heals = healing.get(useitem.item);
+            match item_heals {
+                None => {}
+                Some(healer) => {
+                    stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
+                    if entity == *player_entity {
+                        gamelog.entries.push(format!("You eat the {}, restoring {} HP.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                    }
+                }
+            }
+
+            let consumable = consumables.get(useitem.item);
+            match consumable {
+                None => {}
+                Some(_) => {
+                    entities.delete(useitem.item).expect("delete failed");
                 }
             }
         }
 
-        potion_drinker.clear();
+        using_item.clear();
     }
 }
 

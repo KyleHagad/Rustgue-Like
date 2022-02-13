@@ -1,6 +1,6 @@
 use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
-use super::{ CombatStats, Player, GameLog, Map, Name, Position, State, InBackpack };
+use super::{ CombatStats, Player, GameLog, Map, Name, Position, State, InBackpack, Viewshed };
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::PURPLE), RGB::named(rltk::BLACK));
@@ -171,4 +171,46 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
             }
         }
     }
+}
+
+pub fn ranged_target(gs: &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let player_pos = gs.ecs.fetch::<Point>();
+    let viewsheds = gs.ecs.read_storage::<Viewshed>();
+    let (ylw, blk, blu, cyn, red) = (
+        RGB::named(rltk::KHAKI), RGB::named(rltk::BLACK), RGB::named(rltk::BLUE), RGB::named(rltk::CYAN), RGB::named(rltk::CRIMSON)
+    );
+
+    ctx.print_color(5,0, ylw, blk, "Select Target:");
+
+    let mut available_cells = Vec::new();
+    let visible = viewsheds.get(*player_entity);
+    if let Some(visible) = visible {
+        for idx in visible.visible_tiles.iter() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
+            if distance <= range as f32 {
+                ctx.set_bg(idx.x, idx.y, blu);
+                available_cells.push(idx);
+            }
+        }
+    } else {
+        return (ItemMenuResult::Cancel, None);
+    }
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut valid_target = false;
+    for idx in available_cells.iter() { if idx.x == mouse_pos.0 && idx.y == mouse_pos.1 { valid_target = true; } }
+    if valid_target {
+        ctx.set_bg(mouse_pos.0,mouse_pos.1, cyn);
+        if ctx.left_click {
+            return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0,mouse_pos.1)));
+        }
+    } else {
+        ctx.set_bg(mouse_pos.0,mouse_pos.1, red);
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
+    }
+
+    (ItemMenuResult::NoResponse, None)
 }

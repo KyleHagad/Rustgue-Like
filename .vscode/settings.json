@@ -6,6 +6,7 @@
     "DARKSLATEGREY",
     "equippable",
     "gamelog",
+    "intentionalize",
     "LIGHTPINK",
     "MAPCOUNT",
     "MAPHEIGHT",
@@ -22,6 +23,7 @@
     "runwriter",
     "Saveload",
     "scanlines",
+    "useitem",
     "Viewshed",
     "viewsheds"
   ],
