@@ -1,6 +1,6 @@
 use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
-use super::{ CombatStats, Player, GameLog, Map, Name, Position, State, InBackpack, Viewshed };
+use super::{ RunState, Map, CombatStats, Player, GameLog, Name, Position, State, InBackpack, Viewshed };
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::PURPLE), RGB::named(rltk::BLACK));
@@ -213,4 +213,73 @@ pub fn ranged_target(gs: &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuR
     }
 
     (ItemMenuResult::NoResponse, None)
+}
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuSelection {
+    NewGame,
+    LoadGame,
+    Quit
+}
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuResult {
+    NoSelection{ selected : MainMenuSelection},
+    Selected{ selected : MainMenuSelection }
+}
+
+pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
+    let runstate = gs.ecs.fetch::<RunState>();
+    let (ylw, blk, mga, pnk) = (RGB::named(rltk::KHAKI), RGB::named(rltk::BLACK), RGB::named(rltk::MAGENTA), RGB::named(rltk::LIGHTPINK));
+
+    ctx.print_color_centered(15, ylw, blk, "Rouge Rust Rogue");
+
+    if let RunState::MainMenu{ menu_selection : selection } = *runstate {
+        if selection == NewGame {
+            ctx.print_color_centered(21, mga, blk, "Start New Hunt");
+        } else {
+            ctx.print_color_centered(21, pnk, blk, "Start New Hunt");
+        }
+        if selection == LoadGame {
+            ctx.print_color_centered(23, mga, blk, "Continue Hunt");
+        } else {
+            ctx.print_color_centered(23, pnk, blk, "Continue Hunt");
+        }
+        if selection == Quit {
+            ctx.print_color_centered(25, mga, blk, "Quit");
+        } else {
+            ctx.print_color_centered(25, pnk, blk, "Quit");
+        }
+
+        use MainMenuSelection::*;
+        match ctx.key {
+            None => return MainMenuResult::NoSelection{ selected: selection },
+            Some(key) => {
+                match key {
+                    VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: MainMenuSelection::Quit } }
+                    VirtualKeyCode::Down => {
+                        let newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Up => {
+                        let newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Return => return MainMenuResult::Selected{ selected: selection },
+                    _ => return MainMenuResult::NoSelection{ selected: selection }
+                }
+            }
+        }
+    }
+
+    MainMenuResult::NoSelection { selected: MainMenuSelection::NewGame }
 }
