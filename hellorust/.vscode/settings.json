@@ -1,18 +1,33 @@
 {
   "cSpell.words": [
+    "DARKSLATEGREY",
+    "equippable",
     "gamelog",
+    "greyscale",
     "intentionalize",
+    "LIGHTPINK",
+    "mapcopy",
+    "MAPCOUNT",
+    "MAPHEIGHT",
     "mapindex",
     "MAPWIDTH",
+    "MEDIUMVIOLETRED",
     "newrunstate",
+    "newselection",
+    "pathing",
     "picksup",
+    "ppos",
     "Renderable",
     "renderables",
     "Rltk",
     "runstate",
     "runwriter",
+    "savegame",
+    "savehelper",
+    "saveload",
     "scanlines",
     "useitem",
-    "Viewshed"
+    "Viewshed",
+    "viewsheds"
   ]
 }
