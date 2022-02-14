@@ -61,34 +61,33 @@ fn get_item(ecs: &mut World) {
 }
 
 pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+    use rltk::VirtualKeyCode::*;
     match ctx.key {
         None => { return RunState::AwaitingInput }
         Some(key) => match key {
-            VirtualKeyCode::Left |
-            VirtualKeyCode::A => try_move_player(-1, 0, &mut gs.ecs),
+            Left | A => try_move_player(-1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Right |
-            VirtualKeyCode::D => try_move_player(1, 0, &mut gs.ecs),
+            Right | D => try_move_player(1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Up |
-            VirtualKeyCode::W => try_move_player(0, -1, &mut gs.ecs),
+            Up | W => try_move_player(0, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Down |
-            VirtualKeyCode::S => try_move_player(0, 1, &mut gs.ecs),
+            Down | S => try_move_player(0, 1, &mut gs.ecs),
 
-            VirtualKeyCode::E => try_move_player(1, -1, &mut gs.ecs),
+            E => try_move_player(1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Q => try_move_player(-1, -1, &mut gs.ecs),
+            Q => try_move_player(-1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::C => try_move_player(1, 1, &mut gs.ecs),
+            C => try_move_player(1, 1, &mut gs.ecs),
 
-            VirtualKeyCode::Z => try_move_player(-1, 1, &mut gs.ecs),
+            Z => try_move_player(-1, 1, &mut gs.ecs),
 
-            VirtualKeyCode::G => get_item(&mut gs.ecs),
+            G => get_item(&mut gs.ecs),
 
-            VirtualKeyCode::I => return RunState::ShowInventory,
+            I => return RunState::ShowInventory,
 
-            VirtualKeyCode::T => return RunState::ShowDropItem,
+            T => return RunState::ShowDropItem,
+
+            Escape => return RunState::SaveGame,
 
             _ => { return RunState::AwaitingInput }
         },
