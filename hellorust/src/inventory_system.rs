@@ -56,28 +56,6 @@ impl<'a> System<'a> for ItemUseSystem {
             let mut used_item = true;
             let mut targets : Vec<Entity> = Vec::new();
 
-            let mut add_confusion = Vec::new();
-            {
-                let causes_confusion = confused.get(useitem.item);
-                match causes_confusion {
-                    None => { }
-                    Some(confusion) => {
-                        used_item = false;
-                        for mob in targets.iter() {
-                            add_confusion.push(( *mob, confusion.turns ));
-                            if entity == *player_entity {
-                                let mob_name = names.get(*mob).unwrap();
-                                let item_name = names.get(useitem.item).unwrap();
-                                gamelog.entries.push(format!("You use {} on {}, confusing them", item_name.name, mob_name.name));
-                            }
-                        }
-                    }
-                }
-            }
-            for mob in add_confusion.iter() {
-                confused.insert(mob.0, Confusion{ turns: mob.1})
-                    .expect("Unable to insert confusion");
-            }
             match useitem.target {
                 None => { targets.push( *player_entity ); }
                 Some(target) => {
@@ -103,6 +81,22 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            let item_heals = healing.get(useitem.item);
+            match item_heals {
+                None => {}
+                Some(healer) => {
+                    for target in targets.iter() {
+                        let stats = combat_stats.get_mut(*target);
+                        if let Some(stats) = stats {
+                            stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
+                            if entity == *player_entity {
+                                gamelog.entries.push(format!("You eat the {}, restoring {} HP.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                            }
+                        }
+                    }
+                }
+            }
+
             let item_damages = inflict_damage.get(useitem.item);
             match item_damages {
                 None => {}
@@ -121,27 +115,36 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
-            let item_heals = healing.get(useitem.item);
-            match item_heals {
-                None => {}
-                Some(healer) => {
-                    for target in targets.iter() {
-                        let stats = combat_stats.get_mut(*target);
-                        if let Some(stats) = stats {
-                            stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
+            let mut add_confusion = Vec::new();
+            {
+                let causes_confusion = confused.get(useitem.item);
+                match causes_confusion {
+                    None => { }
+                    Some(confusion) => {
+                        used_item = false;
+                        for mob in targets.iter() {
+                            add_confusion.push(( *mob, confusion.turns ));
                             if entity == *player_entity {
-                                gamelog.entries.push(format!("You eat the {}, restoring {} HP.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                                let mob_name = names.get(*mob).unwrap();
+                                let item_name = names.get(useitem.item).unwrap();
+                                gamelog.entries.push(format!("You use {} on {}, confusing them", item_name.name, mob_name.name));
                             }
                         }
                     }
                 }
             }
+            for mob in add_confusion.iter() {
+                confused.insert(mob.0, Confusion{ turns: mob.1})
+                    .expect("Unable to insert confusion");
+            }
 
-            let consumable = consumables.get(useitem.item);
-            match consumable {
-                None => {}
-                Some(_) => {
-                    entities.delete(useitem.item).expect("delete failed");
+            if used_item {
+                let consumable = consumables.get(useitem.item);
+                match consumable {
+                    None => {}
+                    Some(_) => {
+                        entities.delete(useitem.item).expect("delete failed");
+                    }
                 }
             }
         }
