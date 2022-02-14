@@ -1,5 +1,8 @@
+extern crate serde;
+
 use rltk::{ GameState, Rltk, Point };
 use specs::prelude::*;
+use specs::saveload::{ SimpleMarker, SimpleMarkerAllocator };
 
 
 mod components; // import components
@@ -27,6 +30,7 @@ pub use gui::*;
 mod gamelog;
 pub use gamelog::*;
 mod spawner;
+mod saveload_system;
 
 pub struct State {
     pub ecs: World
@@ -56,35 +60,64 @@ impl State {
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn,
-                    ShowInventory, ShowDropItem, ShowTargeting {range: i32, item: Entity} }
+pub enum RunState {
+    AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
+    ShowTargeting {range: i32, item: Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+}
 
 impl GameState for State {//  GameState is a trait implemented on State
     fn tick(&mut self, ctx: &mut Rltk) {
-        ctx.cls();
-        draw_map(&self.ecs, ctx);
-
-        {
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let map = self.ecs.fetch::<Map>();
-
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by( |&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-            for (pos, render) in data.iter() {
-                let idx = map.xy_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
-            }
-
-            draw_ui(&self.ecs, ctx);
-        }
-
         let mut newrunstate;
         {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
+        ctx.cls();
+
         match newrunstate {
+            RunState::MainMenu{ .. } => {}
+            _ => {
+                draw_map(&self.ecs, ctx);
+
+                {
+                    let positions = self.ecs.read_storage::<Position>();
+                    let renderables = self.ecs.read_storage::<Renderable>();
+                    let map = self.ecs.fetch::<Map>();
+
+                    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                    data.sort_by( |&a, &b| b.1.render_order.cmp(&a.1.render_order) );
+                    for (pos, render) in data.iter() {
+                        let idx = map.xy_idx(pos.x, pos.y);
+                        if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
+                    }
+
+                    draw_ui(&self.ecs, ctx);
+                }
+            }
+        }
+
+
+        match newrunstate {
+            RunState::MainMenu{ .. } => {
+                let result = gui::main_menu(self, ctx);
+                match result {
+                    MainMenuResult::NoSelection{ selected } => newrunstate = RunState::MainMenu{ menu_selection: selected },
+                    MainMenuResult::Selected{ selected } => {
+                        match selected {
+                            MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                            MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            MainMenuSelection::Quit => { ::std::process::exit(0); }
+                        }
+                    }
+                }
+            }
             RunState::PreRun => {
                 self.run_systems();
                 self.ecs.maintain();
@@ -150,6 +183,10 @@ impl GameState for State {//  GameState is a trait implemented on State
                     }
                 }
             }
+            RunState::SaveGame => {
+                saveload_system::save_game(&mut self.ecs);
+                newrunstate = RunState::MainMenu{ menu_selection : MainMenuSelection::Quit }
+            }
         }
 
         {
@@ -196,6 +233,10 @@ fn main() -> rltk::BError {
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<WantsToDropItem>();
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
+
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
