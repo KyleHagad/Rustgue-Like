@@ -228,6 +228,7 @@ pub enum MainMenuResult {
 }
 
 pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
+    let save_exists = super::saveload_system::does_save_exist();
     let runstate = gs.ecs.fetch::<RunState>();
     let (ylw, blk, mga, pnk) = (RGB::named(rltk::KHAKI), RGB::named(rltk::BLACK), RGB::named(rltk::MAGENTA), RGB::named(rltk::LIGHTPINK));
 
@@ -255,22 +256,22 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
             None => return MainMenuResult::NoSelection{ selected: selection },
             Some(key) => {
                 match key {
-                    VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: MainMenuSelection::Quit } }
+                    VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: Quit } }
                     VirtualKeyCode::Down => {
                         let newselection;
                         match selection {
-                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
-                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
-                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
+                            NewGame => newselection = LoadGame,
+                            LoadGame => newselection = Quit,
+                            Quit => newselection = NewGame
                         }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }
                     VirtualKeyCode::Up => {
                         let newselection;
                         match selection {
-                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
-                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
-                            MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame
+                            NewGame => newselection = Quit,
+                            LoadGame => newselection = NewGame,
+                            Quit => newselection = LoadGame
                         }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }
