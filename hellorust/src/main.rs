@@ -115,6 +115,7 @@ impl GameState for State {//  GameState is a trait implemented on State
                             MainMenuSelection::LoadGame => {
                                 saveload_system::load_game(&mut self.ecs);
                                 newrunstate = RunState::AwaitingInput;
+                                saveload_system::delete_save();
                             },
                             MainMenuSelection::Quit => { ::std::process::exit(0); }
                         }
@@ -255,8 +256,8 @@ fn main() -> rltk::BError {
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
-    gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame});
-    gs.ecs.insert(GameLog{ entries : vec!["Gathering mana...".to_string()]});
+    gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame });
+    gs.ecs.insert(GameLog{ entries : vec!["Gathering mana...".to_string()] });
 
     rltk::main_loop(context, gs) //  Calls into the `rltk` namespace to activate `main_loop
 }
