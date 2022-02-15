@@ -1,6 +1,7 @@
 {
   "cSpell.words": [
     "DARKSLATEGREY",
+    "deleteme",
     "equippable",
     "gamelog",
     "greyscale",
@@ -28,6 +29,7 @@
     "scanlines",
     "useitem",
     "Viewshed",
-    "viewsheds"
+    "viewsheds",
+    "worldmap"
   ]
 }
