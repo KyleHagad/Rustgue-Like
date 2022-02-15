@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "DARKCYAN",
     "DARKSLATEGREY",
     "deleteme",
     "equippable",
@@ -27,6 +28,7 @@
     "savehelper",
     "saveload",
     "scanlines",
+    "unequip",
     "useitem",
     "Viewshed",
     "viewsheds",
