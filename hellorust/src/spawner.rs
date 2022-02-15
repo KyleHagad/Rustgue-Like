@@ -9,8 +9,25 @@ use super::{
     random_table::RandomTable,
 };
 
+/// Spawns player & returns its entity
+pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
+    ecs.create_entity()
+        .with(Position{ x: player_x, y: player_y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('⌂'),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 0,
+        })
+        .with(Player {})
+        .with(Viewshed{visible_tiles : Vec::new(), range: 8, dirty: true })
+        .with(Name{ name: "Player".to_string() })
+        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build()
+}
+
 const MAX_MONSTERS : i32 = 4;
-const MAX_ITEMS : i32 = 2;
 
 fn room_table(map_depth: i32) -> RandomTable {
     RandomTable::new()
@@ -142,52 +159,6 @@ fn confusion_scroll(ecs: &mut World, x: i32, y:i32) {
         .with(Confusion{ turns: 4 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
-}
-
-/// Spawns player & returns its entity
-pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
-    ecs.create_entity()
-        .with(Position{ x: player_x, y: player_y })
-        .with(Renderable {
-            glyph: rltk::to_cp437('⌂'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 0,
-        })
-        .with(Player {})
-        .with(Viewshed{visible_tiles : Vec::new(), range: 8, dirty: true })
-        .with(Name{ name: "Player".to_string() })
-        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build()
-}
-
-/// Spawns random monster at a given location
-pub fn random_monster(ecs: &mut World, x: i32, y: i32) {
-    let roll : i32;
-    {
-        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1,2);
-    }
-    match roll {
-        1 => { orc(ecs, x,y) }
-        _ => { goblin(ecs, x,y) }
-    }
-}
-
-/// Random Item
-fn random_item(ecs: &mut World, x: i32, y: i32) {
-    let roll : i32;
-    {
-        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1,6);
-    }
-    match roll {
-        1 => { health_potion(ecs, x,y) }
-        2 => { magic_missile_scroll(ecs, x,y) }
-        3 => { fireball_scroll(ecs, x,y) }
-        _ => { confusion_scroll(ecs, x,y) }
-    }
 }
 
 fn orc(ecs: &mut World, x: i32, y: i32) { monster(ecs, x,y, rltk::to_cp437('O'), "Orc"); }
