@@ -236,15 +236,19 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
 
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == NewGame {
-            ctx.print_color_centered(21, mga, blk, "Start New Hunt");
+            ctx.print_color_centered(21, mga, blk, "Start Hunting");
         } else {
-            ctx.print_color_centered(21, pnk, blk, "Start New Hunt");
+            ctx.print_color_centered(21, pnk, blk, "Start Hunting");
         }
-        if selection == LoadGame {
-            ctx.print_color_centered(23, mga, blk, "Continue Hunt");
-        } else {
-            ctx.print_color_centered(23, pnk, blk, "Continue Hunt");
+
+        if save_exists {
+            if selection == LoadGame {
+                ctx.print_color_centered(23, mga, blk, "Continue Hunt");
+            } else {
+                ctx.print_color_centered(23, pnk, blk, "Continue Hunt");
+            }
         }
+
         if selection == Quit {
             ctx.print_color_centered(25, mga, blk, "Quit");
         } else {
@@ -258,21 +262,23 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
                 match key {
                     VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: Quit } }
                     VirtualKeyCode::Down => {
-                        let newselection;
+                        let mut newselection;
                         match selection {
                             NewGame => newselection = LoadGame,
                             LoadGame => newselection = Quit,
                             Quit => newselection = NewGame
                         }
+                        if newselection == LoadGame && !save_exists { newselection = Quit; }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }
                     VirtualKeyCode::Up => {
-                        let newselection;
+                        let mut newselection;
                         match selection {
                             NewGame => newselection = Quit,
                             LoadGame => newselection = NewGame,
                             Quit => newselection = LoadGame
                         }
+                        if newselection == LoadGame && !save_exists { newselection = NewGame; }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }
                     VirtualKeyCode::Return => return MainMenuResult::Selected{ selected: selection },
