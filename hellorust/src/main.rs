@@ -31,6 +31,7 @@ mod gamelog;
 pub use gamelog::*;
 mod spawner;
 mod saveload_system;
+mod random_table;
 
 pub struct State {
     pub ecs: World
@@ -241,16 +242,17 @@ impl State {
 
         //?  Build a new map and associate the player with it
         let worldmap;
+        let current_depth;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            let current_depth = worldmap_resource.depth;
+            current_depth = worldmap_resource.depth;
             *worldmap_resource = Map::new_map_rooms_and_corridors(current_depth + 1);
             worldmap = worldmap_resource.clone();
         }
 
         //?  Spawn mobs
         for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room);
+            spawner::spawn_room(&mut self.ecs, room, current_depth+1);
         }
 
         //?  Place Player
@@ -329,7 +331,7 @@ fn main() -> rltk::BError {
     // Monster Spawner
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut gs.ecs, room);
+        spawner::spawn_room(&mut gs.ecs, room, 1);
     }
 
     gs.ecs.insert(map);
