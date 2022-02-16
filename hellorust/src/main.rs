@@ -24,7 +24,12 @@ pub use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 pub use damage_system::DamageSystem;
 mod inventory_system;
-pub use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem };
+pub use inventory_system::{
+    ItemCollectionSystem,
+    ItemUseSystem,
+    ItemDropSystem,
+    ItemRemoveSystem,
+};
 mod gui;
 pub use gui::*;
 mod gamelog;
@@ -55,6 +60,8 @@ impl State {
         use_items.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem{};
         drop_items.run_now(&self.ecs);
+        let mut remove_item = ItemRemoveSystem{};
+        remove_item.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -72,6 +79,7 @@ pub enum RunState {
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
     NextLevel,
+    ShowRemoveItem,
 }
 
 impl GameState for State {//  GameState is a trait implemented on State
@@ -176,6 +184,20 @@ impl GameState for State {//  GameState is a trait implemented on State
                     }
                 }
             }
+            RunState::ShowRemoveItem => {
+                let result = gui::remove_item_menu(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => { }
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity })
+                            .expect("Unable to intentionalize removing item");
+                        newrunstate = RunState::PlayerTurn;
+                    }
+                }
+            }
             RunState::ShowTargeting{range, item} => {
                 let result = gui::ranged_target(self, ctx, range);
                 match result.0 {
@@ -214,6 +236,7 @@ impl State {
         let player = self.ecs.read_storage::<Player>();
         let backpack = self.ecs.read_storage::<InBackpack>();
         let player_entity = self.ecs.fetch::<Entity>();
+        let equipped = self.ecs.read_storage::<Equipped>();
 
         let mut to_delete : Vec<Entity> = Vec::new();
         for entity in entities.join() {
@@ -225,6 +248,13 @@ impl State {
             let bp = backpack.get(entity);
             if let Some(bp) = bp {
                 if bp.owner == *player_entity { should_delete = false; }
+            }
+
+            let eq = equipped.get(entity);
+            if let Some(eq) = eq {
+                if eq.owner == *player_entity {
+                    should_delete = false;
+                }
             }
 
             if should_delete { to_delete.push(entity); }
@@ -318,8 +348,11 @@ fn main() -> rltk::BError {
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<WantsToDropItem>();
+    gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<Equippable>();
     gs.ecs.register::<Equipped>();
+    gs.ecs.register::<MeleePowerBonus>();
+    gs.ecs.register::<DefenseBonus>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
 

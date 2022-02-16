@@ -1,6 +1,6 @@
 use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
-use super::{ RunState, Map, CombatStats, Player, GameLog, Name, Position, State, InBackpack, Viewshed };
+use super::{ RunState, Map, CombatStats, Player, GameLog, Name, Position, State, InBackpack, Viewshed, Equipped };
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let (
@@ -164,6 +164,53 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
 
         ctx.print(21, y, &name.name.to_string());
         equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+
+pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<Equipped>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter( |item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let (ylw, pnk, blk) = (RGB::named(rltk::KHAKI), RGB::named(rltk::LIGHTPINK), RGB::named(rltk::BLACK));
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, pnk, blk);
+    ctx.print_color(18, y-2, ylw, blk, "Unequip which item?");
+    ctx.print_color(18, y+count as i32 +1, ylw, blk, "ESC Stop looking");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter( |item| item.1.owner == *player_entity ) {
+        ctx.set(17, y, pnk, blk, rltk::to_cp437('('));
+        ctx.set(18, y, ylw, blk, 97+j as rltk::FontCharType);
+        ctx.set(19, y, pnk, blk, rltk::to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        equippable.push(entity);
+
         y += 1;
         j += 1;
     }

@@ -1,8 +1,11 @@
 use specs::prelude::*;
-use super::{Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map,
-            WantsToPickupItem, WantsToUseItem, WantsToDropItem, SufferDamage,
-            Consumable, ProvidesHealing, InflictsDamage, AreaOfEffect, Confusion,
-            Equippable, Equipped};
+use super::{
+    Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map,
+    WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
+    SufferDamage,
+    Consumable, ProvidesHealing, InflictsDamage, AreaOfEffect, Confusion,
+    Equippable, Equipped
+};
 
 pub struct ItemCollectionSystem {}
 impl<'a> System<'a> for ItemCollectionSystem {
@@ -47,7 +50,8 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
                         WriteStorage<'a, CombatStats>,
-                        WriteStorage<'a, SufferDamage>    );
+                        WriteStorage<'a, SufferDamage>,
+                        WriteStorage<'a, InBackpack>    );
 
     fn run(&mut self, data : Self::SystemData) {
         let (
@@ -66,6 +70,7 @@ impl<'a> System<'a> for ItemUseSystem {
             mut equipped,
             mut combat_stats,
             mut suffer_damage,
+            mut backpack,
         ) = data;
 
         for (entity, useitem) in (&entities, &using_item).join() {
@@ -219,7 +224,8 @@ impl <'a> System<'a> for ItemDropSystem {
                 dropper_pos.x = dropped_pos.x;
                 dropper_pos.y = dropped_pos.y;
             }
-            positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y }).expect("Unable to insert");
+            positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y })
+                .expect("Unable to insert");
             backpack.remove(to_drop.item);
 
             if entity == *player_entity {
@@ -228,5 +234,26 @@ impl <'a> System<'a> for ItemDropSystem {
         }
 
         wants_drop.clear();
+    }
+}
+
+pub struct ItemRemoveSystem { }
+impl <'a> System<'a> for ItemRemoveSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( Entities<'a>,
+                        WriteStorage<'a, WantsToRemoveItem>,
+                        WriteStorage<'a, Equipped>,
+                        WriteStorage<'a, InBackpack>, );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (entities, mut wants_remove, mut equipped, mut backpack) = data;
+
+        for (entity, to_remove) in (&entities, &wants_remove).join() {
+            equipped.remove(to_remove.item);
+            backpack.insert(to_remove.item, InBackpack{ owner: entity })
+                .expect("Unable to insert backpack");
+        }
+
+        wants_remove.clear();
     }
 }

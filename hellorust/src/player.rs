@@ -122,13 +122,13 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 
             Down | S => try_move_player(0, 1, &mut gs.ecs),
 
-            E => try_move_player(1, -1, &mut gs.ecs),
+            E => try_move_player(1, -1, &mut gs.ecs), //? NE
 
-            Q => try_move_player(-1, -1, &mut gs.ecs),
+            Q => try_move_player(-1, -1, &mut gs.ecs), //? NW
 
-            C => try_move_player(1, 1, &mut gs.ecs),
+            C => try_move_player(1, 1, &mut gs.ecs), //? SE
 
-            Z => try_move_player(-1, 1, &mut gs.ecs),
+            Z => try_move_player(-1, 1, &mut gs.ecs), //? SW
 
             G => get_item(&mut gs.ecs),
 
@@ -141,6 +141,8 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             I => return RunState::ShowInventory,
 
             T => return RunState::ShowDropItem,
+
+            R => return RunState::ShowRemoveItem,
 
             Escape => return RunState::SaveGame,
 

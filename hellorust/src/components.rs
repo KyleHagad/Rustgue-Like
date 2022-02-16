@@ -98,6 +98,12 @@ pub struct Equipped {
     pub slot : EquipmentSlot,
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct MeleePowerBonus { pub power : i32 }
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct DefenseBonus { pub defense : i32 }
+
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToPickupItem {
     pub collected_by : Entity,
@@ -110,8 +116,11 @@ pub struct WantsToUseItem {
     pub target : Option<rltk::Point>
 }
 
-#[derive(Component , Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToDropItem { pub item : Entity }
+
+#[derive(Component, Debug, ConvertSaveload, Clone)]
+pub struct WantsToRemoveItem { pub item : Entity }
 
 pub struct SerializeMe;
 
