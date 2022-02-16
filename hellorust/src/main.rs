@@ -37,6 +37,8 @@ pub use gamelog::*;
 mod spawner;
 mod saveload_system;
 mod random_table;
+mod particle_system;
+pub use particle_system::*;
 
 pub struct State {
     pub ecs: World
@@ -62,6 +64,8 @@ impl State {
         drop_items.run_now(&self.ecs);
         let mut remove_item = ItemRemoveSystem{};
         remove_item.run_now(&self.ecs);
+        let mut particles = particle_system::ParticleSpawnSystem{};
+        particles.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -91,6 +95,7 @@ impl GameState for State {//  GameState is a trait implemented on State
             newrunstate = *runstate;
         }
         ctx.cls();
+        particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
             RunState::MainMenu{ .. } => {}
@@ -404,6 +409,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Equipped>();
     gs.ecs.register::<MeleePowerBonus>();
     gs.ecs.register::<DefenseBonus>();
+    gs.ecs.register::<ParticleLifetime>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
 
@@ -419,6 +425,8 @@ fn main() -> rltk::BError {
     for room in map.rooms.iter().skip(1) {
         spawner::spawn_room(&mut gs.ecs, room, 1);
     }
+
+    gs.ecs.insert(particle_system::ParticleBuilder::new());
 
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));

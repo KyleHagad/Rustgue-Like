@@ -41,7 +41,7 @@ pub fn save_game(ecs : &mut World) {
         let mut serializer = serde_json::Serializer::new(writer);
         serialize_individually!(
             ecs, serializer, data,
-            Position, Renderable, Player, Viewshed, Monster,
+            Position, Renderable, Player, Viewshed, Monster, ParticleLifetime,
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
             Item, InBackpack, Consumable,
             MeleePowerBonus, DefenseBonus, Equippable, Equipped,
@@ -94,7 +94,7 @@ pub fn load_game(ecs: &mut World) {
         );
         deserialize_individually!(
             ecs, de, d,
-            Position, Renderable, Player, Viewshed, Monster,
+            Position, Renderable, Player, Viewshed, Monster, ParticleLifetime,
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
             Item, InBackpack, Consumable,
             MeleePowerBonus, DefenseBonus, Equippable, Equipped,
