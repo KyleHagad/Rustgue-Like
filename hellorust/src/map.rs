@@ -192,7 +192,7 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                     fg = RGB::from_f32(0.0, 0.5, 0.5);
                 }
                 TileType::Wall => {
-                    glyph = rltk::to_cp437('█');
+                    glyph = wall_glyph(&*map, x,y);
                     fg = RGB::named(rltk::VIOLET);
                 },
                 TileType::DownStairs => {
@@ -210,4 +210,39 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
             y += 1;
         }
     }
+}
+
+fn wall_glyph(map : &Map, x: i32, y: i32) -> rltk::FontCharType {
+    if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 as i32 { return 35; }
+    let mut mask : u8 = 0;
+
+    if is_revealed_and_wall(map, x,y-1) { mask += 1; }
+    if is_revealed_and_wall(map, x,y+1) { mask += 2; }
+    if is_revealed_and_wall(map, x-1,y) { mask += 4; }
+    if is_revealed_and_wall(map, x+1,y) { mask += 8; }
+
+    match mask {
+        0 => { 9 } // Pillar
+        1 => { 186 } // Wall to north
+        2 => { 186 } // wall to south
+        3 => { 186 } // wall to north and south
+        4 => { 205 } // wall to west
+        5 => { 188 } // wall to north and west
+        6 => { 187 } // wall to south and west
+        7 => { 185 } // wall to north, south and west
+        8 => { 205 } // wall to east
+        9 => { 200 } // wall to north and east
+        10 => { 201 } // wall to south and east
+        11 => { 204 } // wall to north, south and east
+        12 => { 205 } // wall to east and west
+        13 => { 202 } // wall to south, east and west
+        14 => { 203 } // wall to north, west and east
+        15 => { 206 } // wall to all directions
+        _ => { 35 } // missed one?
+    }
+}
+
+fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
+    let idx = map.xy_idx(x,y);
+    map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
 }
