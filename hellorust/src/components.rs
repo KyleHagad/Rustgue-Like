@@ -134,6 +134,9 @@ pub struct ThirstClock {
     pub duration : i32,
 }
 
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesWater { }
+
 pub struct SerializeMe;
 
 #[derive(Component, Serialize, Deserialize, Clone)]

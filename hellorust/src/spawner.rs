@@ -6,7 +6,8 @@ use super::{
     CombatStats, Player, Renderable, Name, Position, Viewshed, Monster,
     BlocksTile, Rect, map::MAPWIDTH, Item, Consumable, ProvidesHealing,
     Ranged, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
-    Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus, ThirstClock, ThirstState,
+    Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus,
+    ThirstClock, ThirstState, ProvidesWater,
     random_table::RandomTable,
 };
 
@@ -36,6 +37,7 @@ fn room_table(map_depth: i32) -> RandomTable {
         .add("Goblin", 10)
         .add("Orc", 1 + map_depth)
         .add("Bloody Heart", 7)
+        .add("Blood Vial", 100)
         .add("Fireball Scroll", 2 + map_depth)
         .add("Confusion Scroll", 2 + map_depth)
         .add("Magic Missile Scroll", 4)
@@ -81,6 +83,7 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Goblin" => goblin(ecs, x,y),
             "Orc" => orc(ecs, x,y),
             "Bloody Heart" => health_potion(ecs, x,y),
+            "Blood Vial" => blood(ecs, x,y),
             "Fireball Scroll" => fireball_scroll(ecs, x,y),
             "Confusion Scroll" => confusion_scroll(ecs, x,y),
             "Magic Missile Scroll" => magic_missile_scroll(ecs, x,y),
@@ -175,6 +178,23 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .with(Item{})
         .with(Consumable{})
         .with(ProvidesHealing{ heal_amount: 8 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn blood(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x,y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('¡'),
+            fg: RGB::named(rltk::RED),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name: "Blood Vial".to_string() })
+        .with(Item{})
+        .with(ProvidesWater{})
+        .with(Consumable{})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

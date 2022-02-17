@@ -2,7 +2,7 @@ use specs::prelude::*;
 use super::{
     Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map,
     WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
-    SufferDamage, Equippable, Equipped,
+    SufferDamage, Equippable, Equipped, ProvidesWater, ThirstClock, ThirstState,
     Consumable, ProvidesHealing, InflictsDamage, AreaOfEffect, Confusion,
     ParticleBuilder,
 };
@@ -53,7 +53,9 @@ impl<'a> System<'a> for ItemUseSystem {
                         WriteStorage<'a, SufferDamage>,
                         WriteStorage<'a, InBackpack>,
                         WriteExpect<'a, ParticleBuilder>,
-                        ReadStorage<'a, Position>
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, ProvidesWater>,
+                        WriteStorage<'a, ThirstClock>,
                         );
 
     fn run(&mut self, data : Self::SystemData) {
@@ -76,6 +78,8 @@ impl<'a> System<'a> for ItemUseSystem {
             mut backpack,
             mut particle_builder,
             positions,
+            provides_water,
+            mut thirst_clock,
         ) = data;
 
         for (entity, useitem) in (&entities, &using_item).join() {
@@ -140,6 +144,21 @@ impl<'a> System<'a> for ItemUseSystem {
                     backpack.remove(useitem.item);
                     if target == *player_entity {
                         gamelog.entries.push(format!("You equip {}", names.get(useitem.item).unwrap().name));
+                    }
+                }
+            }
+
+            let item_drink = provides_water.get(useitem.item);
+            match item_drink {
+                None => { }
+                Some(_) => {
+                    used_item = true;
+                    let target = targets[0];
+                    let tc = thirst_clock.get_mut(target);
+                    if let Some(tc) = tc {
+                        tc.state = ThirstState::Quenched;
+                        tc.duration = 20;
+                        gamelog.entries.push(format!("{} quenches your thirst.", names.get(useitem.item).unwrap().name));
                     }
                 }
             }
