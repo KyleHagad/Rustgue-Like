@@ -1,12 +1,21 @@
 use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
-use super::{ RunState, Map, CombatStats, Player, GameLog, Name, Position, State, InBackpack, Viewshed, Equipped };
+use super::{
+    RunState, Map, CombatStats, Player, GameLog, Name, ThirstClock, ThirstState,
+    Position, State, InBackpack, Viewshed, Equipped
+};
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let (
-        prp, blk, ylw, crm, mvr, gld
+        prp, blk, ylw, crm, mvr, gld, blu
     ) = (
-        RGB::named(rltk::PURPLE), RGB::named(rltk::BLACK), RGB::named(rltk::YELLOW), RGB::named(rltk::CRIMSON), RGB::named(rltk::MEDIUMVIOLETRED), RGB::named(rltk::GOLD)
+        RGB::named(rltk::PURPLE),
+        RGB::named(rltk::BLACK),
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::CRIMSON),
+        RGB::named(rltk::MEDIUMVIOLETRED),
+        RGB::named(rltk::GOLD),
+        RGB::named(rltk::DEEPSKYBLUE),
     );
 
     ctx.draw_box(0, 43, 79, 6, prp, blk);
@@ -14,11 +23,19 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     //?  Health display
     let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
-    for (_player, stats) in (&players, &combat_stats).join() {
+    let thirst = ecs.read_storage::<ThirstClock>();
+    for (_player, stats, tc) in (&players, &combat_stats, &thirst).join() {
         let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
         ctx.print_color(12, 43, ylw, blk, &health);
 
         ctx.draw_bar_horizontal(28, 43, 51, stats.hp, stats.max_hp, crm, blk);
+
+        match tc.state {
+            ThirstState::Quenched => ctx.print_color(60, 42, blu, blk, "THIRST: Quenched"),
+            ThirstState::Normal => { }
+            ThirstState::Thirsty => ctx.print_color(60, 42, prp, blk, "THIRST: Thirsty"),
+            ThirstState::Parched => ctx.print_color(60, 42, mvr, blk, "THIRST: Parched"),
+        }
 
         let log = ecs.fetch::<GameLog>();
         let mut y = 44;

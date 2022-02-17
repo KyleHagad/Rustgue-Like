@@ -125,6 +125,15 @@ pub struct WantsToRemoveItem { pub item : Entity }
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct ParticleLifetime { pub lifetime_ms : f32 }
 
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq)]
+pub enum ThirstState { Quenched, Normal, Thirsty, Parched }
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct ThirstClock {
+    pub state : ThirstState,
+    pub duration : i32,
+}
+
 pub struct SerializeMe;
 
 #[derive(Component, Serialize, Deserialize, Clone)]

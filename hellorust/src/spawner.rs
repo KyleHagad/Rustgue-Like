@@ -6,7 +6,7 @@ use super::{
     CombatStats, Player, Renderable, Name, Position, Viewshed, Monster,
     BlocksTile, Rect, map::MAPWIDTH, Item, Consumable, ProvidesHealing,
     Ranged, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
-    Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus,
+    Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus, ThirstClock, ThirstState,
     random_table::RandomTable,
 };
 
@@ -24,6 +24,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
         .with(Viewshed{visible_tiles : Vec::new(), range: 8, dirty: true })
         .with(Name{ name: "Player".to_string() })
         .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
+        .with(ThirstClock{ state: ThirstState::Quenched, duration: 20 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }

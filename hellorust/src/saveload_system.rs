@@ -43,8 +43,8 @@ pub fn save_game(ecs : &mut World) {
             ecs, serializer, data,
             Position, Renderable, Player, Viewshed, Monster, ParticleLifetime,
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
-            Item, InBackpack, Consumable,
-            MeleePowerBonus, DefenseBonus, Equippable, Equipped,
+            ThirstClock, MeleePowerBonus, DefenseBonus,
+            Item, InBackpack, Consumable, Equippable, Equipped,
             Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing,
             WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
             SerializationHelper
@@ -96,8 +96,8 @@ pub fn load_game(ecs: &mut World) {
             ecs, de, d,
             Position, Renderable, Player, Viewshed, Monster, ParticleLifetime,
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
-            Item, InBackpack, Consumable,
-            MeleePowerBonus, DefenseBonus, Equippable, Equipped,
+            ThirstClock, MeleePowerBonus, DefenseBonus,
+            Item, InBackpack, Consumable, Equippable, Equipped,
             Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing,
             WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
             SerializationHelper

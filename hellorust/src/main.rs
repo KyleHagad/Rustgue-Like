@@ -39,6 +39,8 @@ mod saveload_system;
 mod random_table;
 mod particle_system;
 pub use particle_system::*;
+mod thirst_system;
+pub use thirst_system::ThirstSystem;
 
 pub struct State {
     pub ecs: World
@@ -64,6 +66,8 @@ impl State {
         drop_items.run_now(&self.ecs);
         let mut remove_item = ItemRemoveSystem{};
         remove_item.run_now(&self.ecs);
+        let mut thirst_system = ThirstSystem{};
+        thirst_system.run_now(&self.ecs);
         let mut particles = particle_system::ParticleSpawnSystem{};
         particles.run_now(&self.ecs);
 
@@ -409,6 +413,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Equipped>();
     gs.ecs.register::<MeleePowerBonus>();
     gs.ecs.register::<DefenseBonus>();
+    gs.ecs.register::<ThirstClock>();
     gs.ecs.register::<ParticleLifetime>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
