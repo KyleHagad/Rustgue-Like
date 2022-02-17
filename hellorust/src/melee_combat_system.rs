@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use super::{
     CombatStats, DoesMelee, Name, SufferDamage, GameLog,
-    MeleePowerBonus, DefenseBonus, Equipped, Position,
+    MeleePowerBonus, DefenseBonus, Equipped, Position, ThirstClock, ThirstState,
     particle_system::ParticleBuilder,
  };
 
@@ -17,7 +17,8 @@ impl <'a> System<'a> for MeleeCombatSystem {
                         ReadStorage<'a, DefenseBonus>,
                         ReadStorage<'a, Equipped>,
                         WriteExpect<'a, ParticleBuilder>,
-                        ReadStorage<'a, Position>   );
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, ThirstClock>   );
 
     fn run(&mut self, data : Self::SystemData) {
         let (
@@ -32,14 +33,23 @@ impl <'a> System<'a> for MeleeCombatSystem {
             equipped,
             mut particle_builder,
             positions,
+            thirst_clock,
         ) = data;
 
         for (entity, does_melee, name, stats) in (&entities, &does_melee, &names, &combat_stats).join() {
             if stats.hp > 0 {
                 let mut offensive_bonus = 0;
+
                 for (_item_entity, power_bonus, equipped_by) in (&entities, &melee_power_bonus, &equipped).join() {
                     if equipped_by.owner == entity {
                         offensive_bonus += power_bonus.power;
+                    }
+                }
+
+                let tc = thirst_clock.get(entity);
+                if let Some(tc) = tc {
+                    if tc.state == ThirstState::Quenched {
+                        offensive_bonus += 1;
                     }
                 }
 

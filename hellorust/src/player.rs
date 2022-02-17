@@ -4,6 +4,7 @@ use std::cmp::{ max, min };
 use super::{
     Map, TileType, Position, State, RunState, GameLog, Player, Monster,
     Viewshed, CombatStats, DoesMelee, Item, WantsToPickupItem,
+    ThirstClock, ThirstState,
 };
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -97,6 +98,17 @@ fn skip_turn(ecs: &mut World) -> RunState {
     }
 
     let mut log = ecs.fetch_mut::<GameLog>();
+
+    let thirst_clocks = ecs.read_storage::<ThirstClock>();
+    let tc = thirst_clocks.get(*player_entity);
+    if let Some(tc) = tc {
+        match tc.state {
+            ThirstState::Thirsty => can_heal = false,
+            ThirstState::Parched => can_heal = false,
+            _ => { }
+        }
+    }
+
     if can_heal {
         let mut health_components = ecs.write_storage::<CombatStats>();
         let player_hp = health_components.get_mut(*player_entity).unwrap();
