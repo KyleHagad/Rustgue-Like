@@ -32,15 +32,17 @@ pub use inventory_system::{
 };
 mod gui;
 pub use gui::*;
+mod rex_assets;
+pub use rex_assets::*;
 mod gamelog;
 pub use gamelog::*;
-mod spawner;
-mod saveload_system;
-mod random_table;
 mod particle_system;
 pub use particle_system::*;
 mod thirst_system;
 pub use thirst_system::ThirstSystem;
+mod spawner;
+mod saveload_system;
+mod random_table;
 
 pub struct State {
     pub ecs: World
@@ -450,6 +452,7 @@ fn main() -> rltk::BError {
         spawner::spawn_room(&mut gs.ecs, room, 1);
     }
 
+    gs.ecs.insert(rex_assets::RexAssets::new());
     gs.ecs.insert(particle_system::ParticleBuilder::new());
 
     gs.ecs.insert(map);
