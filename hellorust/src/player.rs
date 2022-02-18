@@ -85,6 +85,7 @@ fn skip_turn(ecs: &mut World) -> RunState {
     let worldmap_resource = ecs.fetch::<Map>();
 
     let mut can_heal = true;
+    let mut unseen = true;
     let viewshed = viewshed_components.get(*player_entity).unwrap();
     for tile in viewshed.visible_tiles.iter() {
         let idx = worldmap_resource.xy_idx(tile.x, tile.y);
@@ -92,7 +93,7 @@ fn skip_turn(ecs: &mut World) -> RunState {
             let mob = monsters.get(*entity_id);
             match mob {
                 None => { }
-                Some(_) => { can_heal = false; }
+                Some(_) => { can_heal = false; unseen = false;}
             }
         }
     }
@@ -113,7 +114,13 @@ fn skip_turn(ecs: &mut World) -> RunState {
         let mut health_components = ecs.write_storage::<CombatStats>();
         let player_hp = health_components.get_mut(*player_entity).unwrap();
         player_hp.hp = i32::min(player_hp.hp + 1, player_hp.max_hp);
-        log.entries.push("You rest a moment to catch your breath.".to_string());
+        if player_hp.hp >= player_hp.max_hp {
+            log.entries.push("You wait".to_string());
+        } else {
+            log.entries.push("You rest a moment to catch your breath.".to_string());
+        }
+    } else if unseen {
+        log.entries.push("Your thirst prevents rest.".to_string());
     } else {
         log.entries.push("You wait. There is an enemy nearby.".to_string());
     }
