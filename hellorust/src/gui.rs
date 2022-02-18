@@ -1,8 +1,8 @@
 use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
 use super::{
-    RunState, Map, CombatStats, Player, GameLog, Name, ThirstClock, ThirstState,
-    Position, State, InBackpack, Viewshed, Equipped
+    RunState, Map, CombatStats, Player, GameLog, Name, RexAssets,
+    Position, State, InBackpack, Viewshed, Equipped, ThirstClock, ThirstState,
 };
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
@@ -306,30 +306,45 @@ pub enum MainMenuResult {
 pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     let save_exists = super::saveload_system::does_save_exist();
     let runstate = gs.ecs.fetch::<RunState>();
-    let (ylw, blk, mga, pnk) = (RGB::named(rltk::KHAKI), RGB::named(rltk::BLACK), RGB::named(rltk::MAGENTA), RGB::named(rltk::LIGHTPINK));
+    let (
+        ylw, blk, mga, pnk, whe, gry
+    ) = (
+        RGB::named(rltk::KHAKI),
+        RGB::named(rltk::BLACK),
+        RGB::named(rltk::MAGENTA),
+        RGB::named(rltk::LIGHTPINK),
+        RGB::named(rltk::WHEAT),
+        RGB::named(rltk::SLATEGREY),
+    );
+    let assets = gs.ecs.fetch::<RexAssets>();
+    ctx.render_xp_sprite(&assets.menu, 0,0);
 
-    ctx.print_color_centered(15, ylw, blk, "Rouge Rust Rogue");
+
+    ctx.draw_box_double(24, 18, 31, 14, whe, blk);
+    ctx.print_color_centered(21, ylw, blk, "Rouge Rust Rogue");
 
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == NewGame {
-            ctx.print_color_centered(21, mga, blk, "Start Hunting");
+            ctx.print_color_centered(25, mga, blk, "Start Hunting");
         } else {
-            ctx.print_color_centered(21, pnk, blk, "Start Hunting");
+            ctx.print_color_centered(25, pnk, blk, "Start Hunting");
         }
 
         if save_exists {
             if selection == LoadGame {
-                ctx.print_color_centered(23, mga, blk, "Continue Hunt");
+                ctx.print_color_centered(27, mga, blk, "Continue Hunt");
             } else {
-                ctx.print_color_centered(23, pnk, blk, "Continue Hunt");
+                ctx.print_color_centered(27, pnk, blk, "Continue Hunt");
             }
         }
 
         if selection == Quit {
-            ctx.print_color_centered(25, mga, blk, "Quit");
+            ctx.print_color_centered(29, mga, blk, "Quit");
         } else {
-            ctx.print_color_centered(25, pnk, blk, "Quit");
+            ctx.print_color_centered(29, pnk, blk, "Quit");
         }
+
+        ctx.print_color_centered(31, gry, blk, format!("Use Up/Down Arrows and Enter"));
 
         use MainMenuSelection::*;
         match ctx.key {
