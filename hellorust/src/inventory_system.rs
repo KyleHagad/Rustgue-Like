@@ -1,10 +1,10 @@
 use specs::prelude::*;
 use super::{
-    Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map,
+    Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map, RunState,
     WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
     SufferDamage, Equippable, Equipped, ProvidesWater, ThirstClock, ThirstState,
     Consumable, ProvidesHealing, InflictsDamage, AreaOfEffect, Confusion,
-    ParticleBuilder,
+    MagicMapper, ParticleBuilder,
 };
 
 pub struct ItemCollectionSystem {}
@@ -41,7 +41,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         Entities<'a>,
                         WriteStorage<'a, WantsToUseItem>,
                         ReadStorage<'a, Name>,
-                        ReadExpect<'a, Map>,
+                        WriteExpect<'a, Map>,
                         ReadStorage<'a, Consumable>,
                         ReadStorage<'a, InflictsDamage>,
                         ReadStorage<'a, ProvidesHealing>,
@@ -56,6 +56,8 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, ProvidesWater>,
                         WriteStorage<'a, ThirstClock>,
+                        ReadStorage<'a, MagicMapper>,
+                        WriteExpect<'a, RunState>,
                         );
 
     fn run(&mut self, data : Self::SystemData) {
@@ -80,6 +82,8 @@ impl<'a> System<'a> for ItemUseSystem {
             positions,
             provides_water,
             mut thirst_clock,
+            magic_mapper,
+            mut runstate,
         ) = data;
 
         for (entity, useitem) in (&entities, &using_item).join() {
@@ -219,6 +223,16 @@ impl<'a> System<'a> for ItemUseSystem {
 
                         used_item = true;
                     }
+                }
+            }
+
+            let is_mapper = magic_mapper.get(useitem.item);
+            match is_mapper {
+                None => { }
+                Some(_) => {
+                    used_item = true;
+                    gamelog.entries.push("You feel the shape of the walls.".to_string());
+                    *runstate = RunState::MapReveal{ row: 0 };
                 }
             }
 

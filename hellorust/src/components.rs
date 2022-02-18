@@ -137,6 +137,9 @@ pub struct ThirstClock {
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct ProvidesWater { }
 
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MagicMapper { }
+
 pub struct SerializeMe;
 
 #[derive(Component, Serialize, Deserialize, Clone)]

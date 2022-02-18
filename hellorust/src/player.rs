@@ -128,19 +128,19 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
         Some(key) => match key {
             Left | A => try_move_player(-1, 0, &mut gs.ecs),
 
-            Right | D => try_move_player(1, 0, &mut gs.ecs),
+            Right | F => try_move_player(1, 0, &mut gs.ecs),
 
-            Up | W => try_move_player(0, -1, &mut gs.ecs),
+            Up | S => try_move_player(0, -1, &mut gs.ecs),
 
-            Down | S => try_move_player(0, 1, &mut gs.ecs),
+            Down | D => try_move_player(0, 1, &mut gs.ecs),
 
             E => try_move_player(1, -1, &mut gs.ecs), //? NE
 
-            Q => try_move_player(-1, -1, &mut gs.ecs), //? NW
+            W => try_move_player(-1, -1, &mut gs.ecs), //? NW
 
             C => try_move_player(1, 1, &mut gs.ecs), //? SE
 
-            Z => try_move_player(-1, 1, &mut gs.ecs), //? SW
+            X => try_move_player(-1, 1, &mut gs.ecs), //? SW
 
             G => get_item(&mut gs.ecs),
 

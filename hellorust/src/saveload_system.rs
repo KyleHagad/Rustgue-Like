@@ -45,7 +45,7 @@ pub fn save_game(ecs : &mut World) {
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
             ThirstClock, MeleePowerBonus, DefenseBonus, AreaOfEffect, Confusion,
             Item, InBackpack, Consumable, Equippable, Equipped,
-            Ranged, InflictsDamage, ProvidesHealing, ProvidesWater,
+            Ranged, InflictsDamage, ProvidesHealing, ProvidesWater, MagicMapper,
             WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
             SerializationHelper
         );
@@ -98,7 +98,7 @@ pub fn load_game(ecs: &mut World) {
             Name, BlocksTile, CombatStats, SufferDamage, DoesMelee,
             ThirstClock, MeleePowerBonus, DefenseBonus, AreaOfEffect, Confusion,
             Item, InBackpack, Consumable, Equippable, Equipped,
-            Ranged, InflictsDamage, ProvidesHealing, ProvidesWater,
+            Ranged, InflictsDamage, ProvidesHealing, ProvidesWater, MagicMapper,
             WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
             SerializationHelper
         );

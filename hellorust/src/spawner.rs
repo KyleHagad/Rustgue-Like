@@ -7,7 +7,7 @@ use super::{
     BlocksTile, Rect, map::MAPWIDTH, Item, Consumable, ProvidesHealing,
     Ranged, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
     Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus,
-    ThirstClock, ThirstState, ProvidesWater,
+    ThirstClock, ThirstState, ProvidesWater, MagicMapper,
     random_table::RandomTable,
 };
 
@@ -37,10 +37,11 @@ fn room_table(map_depth: i32) -> RandomTable {
         .add("Goblin", 10)
         .add("Orc", 1 + map_depth)
         .add("Bloody Heart", 7)
-        .add("Blood Vial", 100)
+        .add("Blood Vial", 11)
         .add("Fireball Scroll", 2 + map_depth)
         .add("Confusion Scroll", 2 + map_depth)
         .add("Magic Missile Scroll", 4)
+        .add("Map Scroll", 30)
         .add("Dagger", 3)
         .add("Sword", map_depth -1)
         .add("Shield", 3)
@@ -87,6 +88,7 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Fireball Scroll" => fireball_scroll(ecs, x,y),
             "Confusion Scroll" => confusion_scroll(ecs, x,y),
             "Magic Missile Scroll" => magic_missile_scroll(ecs, x,y),
+            "Map Scroll" => map_scroll(ecs, x,y),
             "Dagger" => dagger(ecs, x,y),
             "Sword" => sword(ecs, x,y),
             "Shield" => shield(ecs, x,y),
@@ -194,6 +196,23 @@ fn blood(ecs: &mut World, x: i32, y: i32) {
         .with(Name{ name: "Blood Vial".to_string() })
         .with(Item{})
         .with(ProvidesWater{})
+        .with(Consumable{})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn map_scroll(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x,y })
+        .with(Renderable{
+            glyph: rltk::to_cp437(')'),
+            fg: RGB::named(rltk::CYAN3),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name{ name : "Map Scroll".to_string() })
+        .with(Item{})
+        .with(MagicMapper{})
         .with(Consumable{})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
