@@ -3,7 +3,7 @@ use specs::prelude::*;
 use std::cmp::{ max, min };
 use super::{
     Map, TileType, Position, State, RunState, GameLog, Player, Monster,
-    Viewshed, CombatStats, DoesMelee, Item, WantsToPickupItem,
+    Viewshed, CombatStats, DoesMelee, Item, WantsToPickupItem, EntityMoved,
     ThirstClock, ThirstState,
 };
 
@@ -13,6 +13,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut viewsheds = ecs.write_storage::<Viewshed>();
     let mut does_melee = ecs.write_storage::<DoesMelee>();
     let combat_stats = ecs.read_storage::<CombatStats>();
+    let mut entity_moved = ecs.write_storage::<EntityMoved>();
     let map = ecs.fetch::<Map>();
     let entities = ecs.entities();
 
@@ -30,6 +31,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         if !map.blocked[destination_idx] {
             pos.x = min(79, max(0, pos.x + delta_x));
             pos.y = min(49, max(0, pos.y + delta_y));
+            entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert moved marker.");
 
             viewshed.dirty = true;
 

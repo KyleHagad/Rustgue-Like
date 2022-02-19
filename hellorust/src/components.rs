@@ -140,6 +140,18 @@ pub struct ProvidesWater { }
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct MagicMapper { }
 
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Hidden { }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct EntryTrigger { }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct TriggersOnce { }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct EntityMoved { }
+
 pub struct SerializeMe;
 
 #[derive(Component, Serialize, Deserialize, Clone)]

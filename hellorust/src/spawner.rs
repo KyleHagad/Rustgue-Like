@@ -5,10 +5,10 @@ use::std::collections::HashMap;
 use super::{
     CombatStats, Player, Renderable, Name, Position, Viewshed, Monster,
     BlocksTile, Rect, map::MAPWIDTH, Item, Consumable, ProvidesHealing,
-    Ranged, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
+    Ranged, InflictsDamage, AreaOfEffect, Confusion, MagicMapper, Hidden,
     Equippable, EquipmentSlot, MeleePowerBonus, DefenseBonus,
-    ThirstClock, ThirstState, ProvidesWater, MagicMapper,
-    random_table::RandomTable,
+    ThirstClock, ThirstState, ProvidesWater, EntryTrigger, TriggersOnce,
+    SerializeMe, random_table::RandomTable,
 };
 
 /// Spawns player & returns its entity
@@ -41,11 +41,13 @@ fn room_table(map_depth: i32) -> RandomTable {
         .add("Fireball Scroll", 2 + map_depth)
         .add("Confusion Scroll", 2 + map_depth)
         .add("Magic Missile Scroll", 4)
-        .add("Map Scroll", 30)
+        .add("Map Scroll", 300)
         .add("Dagger", 3)
         .add("Sword", map_depth -1)
         .add("Shield", 3)
         .add("Tower Shield", map_depth -1)
+        .add("Spike Trap", 200)
+        .add("Snap Trap", 200)
 }
 
 /// Fill a room
@@ -93,6 +95,8 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Sword" => sword(ecs, x,y),
             "Shield" => shield(ecs, x,y),
             "Tower Shield" => tower_shield(ecs, x,y),
+            "Spike Trap" => spike_trap(ecs, x,y),
+            "Snap Trap" => snap_trap(ecs, x,y),
             _ => {}
         }
     }
@@ -274,6 +278,41 @@ fn confusion_scroll(ecs: &mut World, x: i32, y:i32) {
         .with(Consumable{ })
         .with(Ranged{ range: 6 })
         .with(Confusion{ turns: 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn spike_trap(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x,y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('^'),
+            fg: RGB::named(rltk::RED),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name{ name : "Spike Trap".to_string() })
+        .with(Hidden{})
+        .with(EntryTrigger{})
+        .with(InflictsDamage{ damage: 2 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn snap_trap(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x,y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('v'),
+            fg: RGB::named(rltk::RED),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name{ name : "Snap Trap".to_string() })
+        .with(Hidden{})
+        .with(EntryTrigger{})
+        .with(InflictsDamage{ damage: 6 })
+        .with(TriggersOnce{})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
