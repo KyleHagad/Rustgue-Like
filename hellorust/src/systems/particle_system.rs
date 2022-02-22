@@ -1,6 +1,8 @@
 use rltk::RGB;
 use specs::prelude::*;
-use super::{ Rltk, ParticleLifetime, Position, Renderable };
+use super::super::{
+    Rltk, ParticleLifetime, Position, Renderable
+};
 
 pub fn cull_dead_particles(ecs : &mut World, ctx : &Rltk) {
     let mut dead_particles : Vec<Entity> = Vec::new();

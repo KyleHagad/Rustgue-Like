@@ -1,5 +1,7 @@
 use::specs::prelude::*;
-use super::{ CombatStats, SufferDamage, Player, Name, GameLog, RunState, Map, Position };
+use super::super::{
+    CombatStats, SufferDamage, Player, Name, GameLog, RunState, Map, Position
+};
 
 pub struct DamageSystem {}
 impl<'a> System<'a> for DamageSystem {

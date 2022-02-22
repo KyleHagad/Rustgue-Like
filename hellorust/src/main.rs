@@ -13,37 +13,30 @@ mod player;
 pub use player::*;
 mod rect;
 pub use rect::Rect;
-mod visibility_system;
-use visibility_system::VisibilitySystem;
-mod monster_ai_system;
-use monster_ai_system::MonsterAI;
-mod map_indexing_system;
-use map_indexing_system::MapIndexingSystem;
-mod melee_combat_system;
-pub use melee_combat_system::MeleeCombatSystem;
-mod damage_system;
-pub use damage_system::DamageSystem;
-mod inventory_system;
-pub use inventory_system::{
-    ItemCollectionSystem,
-    ItemUseSystem,
-    ItemDropSystem,
-    ItemRemoveSystem,
-};
 mod gui;
 pub use gui::*;
 mod rex_assets;
 pub use rex_assets::*;
 mod gamelog;
 pub use gamelog::*;
-mod particle_system;
-pub use particle_system::*;
-mod thirst_system;
-pub use thirst_system::ThirstSystem;
-pub mod trigger_system;
 pub mod spawner;
-pub mod saveload_system;
 pub mod random_table;
+mod systems;
+use systems::map_indexing_system::MapIndexingSystem;
+use systems::monster_ai_system::MonsterAI;
+use systems::visibility_system::VisibilitySystem;
+pub use systems::saveload_system;
+pub use systems::trigger_system;
+pub use systems::particle_system::*;
+pub use systems::damage_system::DamageSystem;
+pub use systems::thirst_system::ThirstSystem;
+pub use systems::melee_combat_system::MeleeCombatSystem;
+pub use systems::inventory_system::{
+    ItemCollectionSystem,
+    ItemUseSystem,
+    ItemDropSystem,
+    ItemRemoveSystem,
+};
 
 pub struct State {
     pub ecs: World
@@ -73,7 +66,7 @@ impl State {
         remove_item.run_now(&self.ecs);
         let mut thirst_system = ThirstSystem{};
         thirst_system.run_now(&self.ecs);
-        let mut particles = particle_system::ParticleSpawnSystem{};
+        let mut particles = systems::particle_system::ParticleSpawnSystem{};
         particles.run_now(&self.ecs);
 
         self.ecs.maintain();
@@ -105,7 +98,7 @@ impl GameState for State {//  GameState is a trait implemented on State
             newrunstate = *runstate;
         }
         ctx.cls();
-        particle_system::cull_dead_particles(&mut self.ecs, ctx);
+        systems::particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
             RunState::MainMenu{ .. } => {}
@@ -269,7 +262,7 @@ impl GameState for State {//  GameState is a trait implemented on State
             *runwriter = newrunstate;
         }
 
-        damage_system::delete_the_dead(&mut self.ecs);
+        systems::damage_system::delete_the_dead(&mut self.ecs);
     }
 }
 
@@ -461,7 +454,7 @@ fn main() -> rltk::BError {
     }
 
     gs.ecs.insert(rex_assets::RexAssets::new());
-    gs.ecs.insert(particle_system::ParticleBuilder::new());
+    gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
 
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{
+use super::super::{
     ThirstClock, RunState, ThirstState, SufferDamage, gamelog::GameLog,
 };
 

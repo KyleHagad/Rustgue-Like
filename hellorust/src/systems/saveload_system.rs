@@ -10,7 +10,7 @@ use std::convert::Infallible;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
-use super::components::*;
+use super::super::components::*;
 
 macro_rules! serialize_individually {
     ($ecs:expr, $ser:expr, $data:expr, $( $type:ty),*) => {
@@ -28,7 +28,7 @@ macro_rules! serialize_individually {
 
 #[cfg(not(target_arch = "wasm32"))] //?  Prevents web assembly trying to compile something it can't use
 pub fn save_game(ecs : &mut World) {
-    let mapcopy = ecs.get_mut::<super::map::Map>().unwrap().clone();
+    let mapcopy = ecs.get_mut::<super::super::map::Map>().unwrap().clone();
     let savehelper = ecs.create_entity()
                         .with(SerializationHelper{ map : mapcopy })
                         .marked::<SimpleMarker<SerializeMe>>()
@@ -113,9 +113,9 @@ pub fn load_game(ecs: &mut World) {
         let player = ecs.read_storage::<Player>();
         let position = ecs.read_storage::<Position>();
         for (e,h) in (&entities, &helper).join() {
-            let mut worldmap = ecs.write_resource::<super::map::Map>();
+            let mut worldmap = ecs.write_resource::<super::super::map::Map>();
             *worldmap = h.map.clone();
-            worldmap.tile_content = vec![Vec::new(); super::map::MAPCOUNT];
+            worldmap.tile_content = vec![Vec::new(); super::super::map::MAPCOUNT];
             deleteme = Some(e);
         }
         for (e,_p,pos) in (&entities, &player, &position).join() {

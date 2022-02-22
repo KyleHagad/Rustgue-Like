@@ -49,6 +49,15 @@ pub struct CombatStats {
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct DoesMelee { pub target: Entity }
 
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq)]
+pub enum ThirstState { Quenched, Normal, Thirsty, Parched }
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct ThirstClock {
+    pub state : ThirstState,
+    pub duration : i32,
+}
+
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct SufferDamage { pub amount : Vec<i32> }
 impl SufferDamage {
@@ -70,6 +79,9 @@ pub struct Consumable {}
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct ProvidesHealing { pub heal_amount : i32 }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesWater { }
 
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Ranged { pub range : i32 }
@@ -104,6 +116,9 @@ pub struct MeleePowerBonus { pub power : i32 }
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct DefenseBonus { pub defense : i32 }
 
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MagicMapper { }
+
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToPickupItem {
     pub collected_by : Entity,
@@ -124,21 +139,6 @@ pub struct WantsToRemoveItem { pub item : Entity }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct ParticleLifetime { pub lifetime_ms : f32 }
-
-#[derive(Serialize, Deserialize, Copy, Clone, PartialEq)]
-pub enum ThirstState { Quenched, Normal, Thirsty, Parched }
-
-#[derive(Component, Serialize, Deserialize, Clone)]
-pub struct ThirstClock {
-    pub state : ThirstState,
-    pub duration : i32,
-}
-
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct ProvidesWater { }
-
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct MagicMapper { }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Hidden { }

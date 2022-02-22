@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{
+use super::super::{
     EntityMoved, Position, EntryTrigger, Hidden, Map, Name, InflictsDamage,
     ParticleBuilder, SufferDamage, TriggersOnce, gamelog::GameLog,
 };

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{
+use super::super::{
     Name, InBackpack, Position, gamelog::GameLog, CombatStats, Map, RunState,
     WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem,
     SufferDamage, Equippable, Equipped, ProvidesWater, ThirstClock, ThirstState,

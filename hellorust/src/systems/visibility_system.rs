@@ -1,6 +1,8 @@
-use specs::prelude::*;
-use super::{ Viewshed, Position, Map, Player, Hidden, gamelog::GameLog, Name };
 use rltk::{ field_of_view, Point };
+use specs::prelude::*;
+use super::super::{
+    Viewshed, Position, Map, Player, Hidden, gamelog::GameLog, Name,
+};
 
 pub struct VisibilitySystem {}
 

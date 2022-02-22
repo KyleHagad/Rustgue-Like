@@ -1,8 +1,8 @@
 use specs::prelude::*;
-use super::{
+use super::super::{
     CombatStats, DoesMelee, Name, SufferDamage, GameLog,
     MeleePowerBonus, DefenseBonus, Equipped, Position, ThirstClock, ThirstState,
-    particle_system::ParticleBuilder,
+    systems::particle_system::ParticleBuilder,
  };
 
 pub struct MeleeCombatSystem {}

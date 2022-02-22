@@ -1,6 +1,6 @@
 use rltk::{ Point };
 use specs::prelude::*;
-use super::{
+use super::super::{
     Viewshed, Monster, Map, Position, DoesMelee, RunState, Confusion,
     ParticleBuilder, EntityMoved,
 };

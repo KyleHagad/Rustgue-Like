@@ -1,5 +1,7 @@
 use specs::prelude::*;
-use super::{ Map, Position, BlocksTile };
+use super::super::{
+    Map, Position, BlocksTile
+};
 
 pub struct MapIndexingSystem {}
 impl<'a> System<'a> for MapIndexingSystem {
