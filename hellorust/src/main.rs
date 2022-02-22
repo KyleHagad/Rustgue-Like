@@ -21,6 +21,8 @@ mod gamelog;
 pub use gamelog::*;
 pub mod spawner;
 pub mod random_table;
+// - References the `systems.rs` file which give us access to the files within
+//   the `/systems` directory.
 mod systems;
 use systems::map_indexing_system::MapIndexingSystem;
 use systems::monster_ai_system::MonsterAI;
