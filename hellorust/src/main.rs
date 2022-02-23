@@ -21,6 +21,7 @@ mod gamelog;
 pub use gamelog::*;
 pub mod spawner;
 pub mod random_table;
+pub mod map_builders;
 // - References the `systems.rs` file which give us access to the files within
 //   the `/systems` directory.
 mod systems;
@@ -309,22 +310,23 @@ impl State {
         }
 
         //?  Build a new map and associate the player with it
-        let worldmap;
+        let mut worldmap;
         let current_depth;
+        let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
             current_depth = worldmap_resource.depth;
-            *worldmap_resource = Map::new_map_rooms_and_corridors(current_depth + 1);
+            let (new_map, start) = map_builders::build_random_map(current_depth + 1);
+            player_start = start;
+            *worldmap_resource = new_map;
             worldmap = worldmap_resource.clone();
         }
 
         //?  Spawn mobs
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, current_depth+1);
-        }
+        map_builders::spawn(&mut worldmap, &mut self.ecs, current_depth+1);
 
         //?  Place Player
-        let (player_x, player_y) = worldmap.rooms[0].center();
+        let (player_x, player_y) = (player_start.x, player_start.y);
         let mut player_position = self.ecs.write_resource::<Point>();
         *player_position = Point::new(player_x, player_y);
         let mut position_components = self.ecs.write_storage::<Position>();
@@ -359,18 +361,19 @@ impl State {
             self.ecs.delete_entity(*del).expect("Failed to delete on cleanup");
         }
 
-        let worldmap;
+        let mut worldmap;
+        let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = Map::new_map_rooms_and_corridors(1);
+            let (new_map, start) = map_builders::build_random_map(1);
+            player_start = start;
+            *worldmap_resource = new_map;
             worldmap = worldmap_resource.clone();
         }
 
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, 1);
-        }
+        map_builders::spawn(&mut worldmap, &mut self.ecs, 1);
 
-        let (player_x, player_y) = worldmap.rooms[0].center();
+        let (player_x, player_y) = (player_start.x, player_start.y);
         let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
         let mut player_position = self.ecs.write_resource::<Point>();
         *player_position = Point::new(player_x, player_y);
@@ -444,16 +447,14 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let map : Map = Map::new_map_rooms_and_corridors(1);
-    let (player_x, player_y) = map.rooms[0].center();
+    let (mut map, player_start) = map_builders::build_random_map(1);
+    let (player_x, player_y) = (player_start.x, player_start.y);
 
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
 
     // Monster Spawner
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
-    for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut gs.ecs, room, 1);
-    }
+    map_builders::spawn(&mut map, &mut gs.ecs, 1);
 
     gs.ecs.insert(rex_assets::RexAssets::new());
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
