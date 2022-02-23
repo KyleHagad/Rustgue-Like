@@ -5,24 +5,40 @@ use super::{
     apply_room_to_map, apply_horizontal_tunnel, apply_vertical_tunnel, spawner,
 };
 
-pub struct SimpleMapBuilder {}
+pub struct SimpleMapBuilder {
+    map : Map,
+    starting_position : Position,
+    depth : i32,
+    rooms : Vec<Rect>,
+}
 
 impl MapBuilder for SimpleMapBuilder {
-    fn build(new_depth: i32) -> (Map, Position) {
-        let mut map = Map::new(new_depth);
-        let player_pos = SimpleMapBuilder::rooms_and_corridors(&mut map);
-        (map, player_pos)
+    fn get_map(&mut self) -> Map { self.map.clone() }
+
+    fn get_starting_position(&mut self) -> Position { self.starting_position.clone() }
+
+    fn build_map(&mut self) {
+        self.rooms_and_corridors();
     }
 
-    fn spawn(map : &mut Map, ecs : &mut World, new_depth: i32) {
-        for room in map.rooms.iter().skip(1) {
-            spawner::spawn_room(ecs, room, 1);
+    fn spawn_entities(&mut self, ecs : &mut World) {
+        for room in self.rooms.iter().skip(1) {
+            spawner::spawn_room(ecs, room, self.depth);
         }
     }
 }
 
 impl SimpleMapBuilder {
-    fn rooms_and_corridors(map: &mut Map) -> Position {
+    pub fn new(new_depth : i32) -> SimpleMapBuilder {
+        SimpleMapBuilder{
+            map : Map::new(new_depth),
+            starting_position : Position{ x : 0, y : 0 },
+            depth : new_depth,
+            rooms: Vec::new(),
+        }
+    }
+
+    fn rooms_and_corridors(&mut self) {
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
         const MAX_SIZE : i32 = 10;
@@ -32,38 +48,38 @@ impl SimpleMapBuilder {
         for _i in 0..MAX_ROOMS {
             let (w, h) = ( rng.range(MIN_SIZE, MAX_SIZE), rng.range(MIN_SIZE, MAX_SIZE) );
             let (x, y) = (
-                rng.roll_dice(1, map.width - w - 1) - 1,
-                rng.roll_dice(1, map.height - h - 1) - 1,
+                rng.roll_dice(1, self.map.width - w - 1) - 1,
+                rng.roll_dice(1, self.map.height - h - 1) - 1,
             );
             let new_room = Rect::new(x,y,w,h);
             let mut ok = true;
-            for other_room in map.rooms.iter() {
+            for other_room in self.rooms.iter() {
                 if new_room.intersect(other_room) { ok = false }
             }
             if ok {
-                apply_room_to_map(map, &new_room);
+                apply_room_to_map(&mut self.map, &new_room);
 
-                if !map.rooms.is_empty() {
+                if !self.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
-                    let (prev_x, prev_y) = map.rooms[map.rooms.len()-1].center();
+                    let (prev_x, prev_y) = self.rooms[self.rooms.len()-1].center();
                     if rng.range(0, 2) == 1 {
-                        apply_horizontal_tunnel(map, prev_x, new_x, prev_y);
-                        apply_vertical_tunnel(map, prev_y, new_y, new_x);
+                        apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
+                        apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
                     } else {
-                        apply_vertical_tunnel(map, prev_y, new_y, prev_x);
-                        apply_horizontal_tunnel(map, prev_x, new_x, new_y);
+                        apply_vertical_tunnel(&mut self.map, prev_y, new_y, prev_x);
+                        apply_horizontal_tunnel(&mut self.map, prev_x, new_x, new_y);
                     }
                 }
 
-                map.rooms.push(new_room);
+                self.rooms.push(new_room);
             }
         }
 
-        let stairs_position = map.rooms[map.rooms.len()-1].center();
-        let stairs_idx = map.xy_idx(stairs_position.0, stairs_position.1);
-        map.tiles[stairs_idx] = TileType::DownStairs;
+        let stairs_position = self.rooms[self.rooms.len()-1].center();
+        let stairs_idx = self.map.xy_idx(stairs_position.0, stairs_position.1);
+        self.map.tiles[stairs_idx] = TileType::DownStairs;
 
-        let start_pos = map.rooms[0].center();
-        Position{ x: start_pos.0, y: start_pos.1 }
+        let start_pos = self.rooms[0].center();
+        self.starting_position = Position{ x: start_pos.0, y: start_pos.1 };
     }
 }

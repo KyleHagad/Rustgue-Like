@@ -4,7 +4,6 @@ use rltk::{ GameState, Rltk, Point };
 use specs::prelude::*;
 use specs::saveload::{ SimpleMarker, SimpleMarkerAllocator };
 
-
 mod components; // import components
 pub use components::*; // make its public contents available
 mod map;
@@ -310,20 +309,20 @@ impl State {
         }
 
         //?  Build a new map and associate the player with it
-        let mut worldmap;
+        let mut builder;
         let current_depth;
         let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
             current_depth = worldmap_resource.depth;
-            let (new_map, start) = map_builders::build_random_map(current_depth + 1);
-            player_start = start;
-            *worldmap_resource = new_map;
-            worldmap = worldmap_resource.clone();
+            builder = map_builders::random_builder(current_depth + 1);
+            builder.build_map();
+            *worldmap_resource = builder.get_map();
+            player_start = builder.get_starting_position();
         }
 
         //?  Spawn mobs
-        map_builders::spawn(&mut worldmap, &mut self.ecs, current_depth+1);
+        builder.spawn_entities(&mut self.ecs);
 
         //?  Place Player
         let (player_x, player_y) = (player_start.x, player_start.y);
@@ -361,17 +360,16 @@ impl State {
             self.ecs.delete_entity(*del).expect("Failed to delete on cleanup");
         }
 
-        let mut worldmap;
+        let mut builder = map_builders::random_builder(1);
         let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            let (new_map, start) = map_builders::build_random_map(1);
-            player_start = start;
-            *worldmap_resource = new_map;
-            worldmap = worldmap_resource.clone();
+            builder.build_map();
+            player_start = builder.get_starting_position();
+            *worldmap_resource = builder.get_map();
         }
 
-        map_builders::spawn(&mut worldmap, &mut self.ecs, 1);
+        builder.spawn_entities(&mut self.ecs);
 
         let (player_x, player_y) = (player_start.x, player_start.y);
         let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
@@ -447,23 +445,25 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let (mut map, player_start) = map_builders::build_random_map(1);
+    let mut builder = map_builders::random_builder(1);
+    builder.build_map();
+    let player_start = builder.get_starting_position();
+    let map = builder.get_map();
     let (player_x, player_y) = (player_start.x, player_start.y);
 
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
 
     // Monster Spawner
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
-    map_builders::spawn(&mut map, &mut gs.ecs, 1);
-
-    gs.ecs.insert(rex_assets::RexAssets::new());
-    gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
+    builder.spawn_entities(&mut gs.ecs);
 
     gs.ecs.insert(map);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame });
     gs.ecs.insert(GameLog{ entries : vec!["Gathering mana...".to_string()] });
+    gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
+    gs.ecs.insert(rex_assets::RexAssets::new());
 
     rltk::main_loop(context, gs) //  Calls into the `rltk` namespace to activate `main_loop
 }
