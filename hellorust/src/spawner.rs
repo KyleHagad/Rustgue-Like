@@ -46,8 +46,8 @@ fn room_table(map_depth: i32) -> RandomTable {
         .add("Sword", map_depth -1)
         .add("Shield", 3)
         .add("Tower Shield", map_depth -1)
-        .add("Spike Trap", 200)
-        .add("Snap Trap", 200)
+        .add("Spike Trap", 6)
+        .add("Snap Trap", 6)
 }
 
 /// Fill a room
@@ -317,10 +317,26 @@ fn snap_trap(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn orc(ecs: &mut World, x: i32, y: i32) { monster(ecs, x,y, rltk::to_cp437('O'), "Orc"); }
-fn goblin(ecs: &mut World, x: i32, y: i32) { monster(ecs, x,y, rltk::to_cp437('G'), "Goblin"); }
+fn orc(ecs: &mut World, x: i32, y: i32) {
+    let orc_stats = CombatStats{
+        max_hp: 16,
+        hp: 16,
+        defense: 1,
+        power: 4,
+    };
+    monster(ecs, x,y, rltk::to_cp437('O'), "Orc", orc_stats);
+}
+fn goblin(ecs: &mut World, x: i32, y: i32) {
+    let goblin_stats = CombatStats{
+        max_hp: 6,
+        hp: 6,
+        defense: 0,
+        power: 2,
+    };
+    monster(ecs, x,y, rltk::to_cp437('G'), "Goblin", goblin_stats);
+}
 
-fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : rltk::FontCharType, name : S) -> Entity {
+fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : rltk::FontCharType, name : S, stats : CombatStats) -> Entity {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
@@ -333,7 +349,7 @@ fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : rltk::FontChar
         .with(Monster{})
         .with(Name{ name : name.to_string() })
         .with(BlocksTile{})
-        .with(CombatStats{ max_hp: 16, hp: 16, defense: 1, power: 4 })
+        .with(stats)
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
