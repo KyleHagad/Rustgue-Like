@@ -40,8 +40,14 @@ pub use systems::inventory_system::{
     ItemRemoveSystem,
 };
 
+const SHOW_MAPGEN_VISUALIZER : bool = true;
+
 pub struct State {
-    pub ecs: World
+    pub ecs: World,
+    mapgen_next_state : Option<RunState>,
+    mapgen_history : Vec<Map>,
+    mapgen_index : usize,
+    mapgen_timer : f32,
 }
 
 impl State {
@@ -90,6 +96,7 @@ pub enum RunState {
     ShowRemoveItem,
     GameOver,
     MapReveal { row : i32 },
+    MapGeneration,
 }
 
 impl GameState for State {//  GameState is a trait implemented on State
@@ -103,10 +110,25 @@ impl GameState for State {//  GameState is a trait implemented on State
         systems::particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
+            RunState::MapGeneration => {
+                if !SHOW_MAPGEN_VISUALIZER { newrunstate = self.mapgen_next_state.unwrap(); }
+
+                ctx.cls();
+                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+
+                self.mapgen_timer += ctx.frame_time_ms;
+                if self.mapgen_timer > 300.0 {
+                    self.mapgen_timer = 0.0;
+                    self.mapgen_index += 1;
+                    if self.mapgen_index >= self.mapgen_history.len() {
+                        newrunstate = self.mapgen_next_state.unwrap();
+                    }
+                }
+            }
             RunState::MainMenu{ .. } => {}
             RunState::GameOver{ .. } => {}
             _ => {
-                draw_map(&self.ecs, ctx);
+                draw_map(&self.ecs.fetch::<Map>(), ctx);
 
                 {
                     let positions = self.ecs.read_storage::<Position>();
@@ -128,6 +150,21 @@ impl GameState for State {//  GameState is a trait implemented on State
 
 
         match newrunstate {
+            RunState::MapGeneration => {
+                if !SHOW_MAPGEN_VISUALIZER { newrunstate = self.mapgen_next_state.unwrap(); }
+
+                ctx.cls();
+                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+
+                self.mapgen_timer += ctx.frame_time_ms;
+                if self.mapgen_timer > 300.0 {
+                    self.mapgen_timer = 0.0;
+                    self.mapgen_index += 1;
+                    if self.mapgen_index >= self.mapgen_history.len() {
+                        newrunstate = self.mapgen_next_state.unwrap();
+                    }
+                }
+            }
             RunState::PreRun => {
                 self.run_systems();
                 self.ecs.maintain();
@@ -269,6 +306,40 @@ impl GameState for State {//  GameState is a trait implemented on State
 }
 
 impl State {
+    fn generate_world_map(&mut self, new_depth : i32) {
+        self.mapgen_index = 0;
+        self.mapgen_timer = 0.0;
+        self.mapgen_history.clear();
+        let mut builder = map_builders::random_builder(new_depth);
+        builder.build_map();
+        self.mapgen_history = builder.get_snapshot_history();
+        let player_start;
+        {
+            let mut worldmap_resource = self.ecs.write_resource::<Map>();
+            *worldmap_resource = builder.get_map();
+            player_start = builder.get_starting_position();
+        }
+
+        builder.spawn_entities(&mut self.ecs);
+
+        let (player_x, player_y) = (player_start.x, player_start.y);
+        let mut player_position = self.ecs.write_resource::<Point>();
+        *player_position = Point::new(player_x, player_y);
+        let mut position_components = self.ecs.write_storage::<Position>();
+        let player_entity = self.ecs.fetch::<Entity>();
+        let player_pos_comp = position_components.get_mut(*player_entity);
+        if let Some(player_pos_comp) = player_pos_comp {
+            player_pos_comp.x = player_x;
+            player_pos_comp.y = player_y;
+        }
+
+        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
+        let vs = viewshed_components.get_mut(*player_entity);
+        if let Some(vs) = vs {
+            vs.dirty = true;
+        }
+    }
+
     fn entities_to_remove_on_level_change(&mut self) -> Vec<Entity> {
         let entities = self.ecs.entities();
         let player = self.ecs.read_storage::<Player>();
@@ -309,39 +380,15 @@ impl State {
         }
 
         //?  Build a new map and associate the player with it
-        let mut builder;
         let current_depth;
-        let player_start;
         {
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
+            let worldmap_resource = self.ecs.fetch::<Map>();
             current_depth = worldmap_resource.depth;
-            builder = map_builders::random_builder(current_depth + 1);
-            builder.build_map();
-            *worldmap_resource = builder.get_map();
-            player_start = builder.get_starting_position();
         }
-
-        //?  Spawn mobs
-        builder.spawn_entities(&mut self.ecs);
+        self.generate_world_map(current_depth + 1);
 
         //?  Place Player
-        let (player_x, player_y) = (player_start.x, player_start.y);
-        let mut player_position = self.ecs.write_resource::<Point>();
-        *player_position = Point::new(player_x, player_y);
-        let mut position_components = self.ecs.write_storage::<Position>();
         let player_entity = self.ecs.fetch::<Entity>();
-        let player_pos_comp = position_components.get_mut(*player_entity);
-        if let Some(player_pos_comp) = player_pos_comp {
-            player_pos_comp.x = player_x;
-            player_pos_comp.y = player_y;
-        }
-
-        //?  Dirty player's viewshed
-        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
-        let vs = viewshed_components.get_mut(*player_entity);
-        if let Some(vs) = vs { vs.dirty = true; }
-
-        //?  Add log and give player 'rest healing'
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
         gamelog.entries.push("You descend to the next level. Your heart beats with anticipation.".to_string());
         let mut player_health_store = self.ecs.write_storage::<CombatStats>();
@@ -360,35 +407,13 @@ impl State {
             self.ecs.delete_entity(*del).expect("Failed to delete on cleanup");
         }
 
-        let mut builder = map_builders::random_builder(1);
-        let player_start;
         {
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            builder.build_map();
-            player_start = builder.get_starting_position();
-            *worldmap_resource = builder.get_map();
+            let player_entity = spawner::player(&mut self.ecs, 0 , 0);
+            let mut player_entity_writer = self.ecs.write_resource::<Entity>();
+            *player_entity_writer = player_entity;
         }
 
-        builder.spawn_entities(&mut self.ecs);
-
-        let (player_x, player_y) = (player_start.x, player_start.y);
-        let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
-        let mut player_position = self.ecs.write_resource::<Point>();
-        *player_position = Point::new(player_x, player_y);
-        let mut position_components = self.ecs.write_storage::<Position>();
-        let mut player_entity_writer = self.ecs.write_resource::<Entity>();
-        *player_entity_writer = player_entity;
-        let player_pos_comp = position_components.get_mut(player_entity);
-        if let Some(player_pos_comp) = player_pos_comp {
-            player_pos_comp.x = player_x;
-            player_pos_comp.y = player_y;
-        }
-
-        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
-        let vs = viewshed_components.get_mut(player_entity);
-        if let Some(vs) = vs {
-            vs.dirty = true;
-        }
+        self.generate_world_map(1);
     }
 }
 
@@ -403,7 +428,11 @@ fn main() -> rltk::BError {
     // context.with_post_scanlines(true);
     // Create a game-state
     let mut gs = State {
-        ecs: World::new()
+        ecs: World::new(),
+        mapgen_index : 0,
+        mapgen_history : Vec::new(),
+        mapgen_next_state : Some(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame }),
+        mapgen_timer : 0.0,
     };
     // Register components to the game-state
     gs.ecs.register::<Position>();
@@ -445,25 +474,18 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let mut builder = map_builders::random_builder(1);
-    builder.build_map();
-    let player_start = builder.get_starting_position();
-    let map = builder.get_map();
-    let (player_x, player_y) = (player_start.x, player_start.y);
-
-    let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
-
-    // Monster Spawner
+    gs.ecs.insert(Map::new(1));
+    gs.ecs.insert(Point::new(0, 0));
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
-    builder.spawn_entities(&mut gs.ecs);
-
-    gs.ecs.insert(map);
-    gs.ecs.insert(Point::new(player_x, player_y));
+    let player_entity = spawner::player(&mut gs.ecs, 0, 0);
     gs.ecs.insert(player_entity);
-    gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame });
+    gs.ecs.insert(RunState::MapGeneration{});
+    // gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame });
     gs.ecs.insert(GameLog{ entries : vec!["Gathering mana...".to_string()] });
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
+
+    gs.generate_world_map(1);
 
     rltk::main_loop(context, gs) //  Calls into the `rltk` namespace to activate `main_loop
 }
