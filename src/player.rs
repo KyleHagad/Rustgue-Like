@@ -139,9 +139,9 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 
             Right | F => try_move_player(1, 0, &mut gs.ecs),
 
-            Up | S => try_move_player(0, -1, &mut gs.ecs),
+            Up | D => try_move_player(0, -1, &mut gs.ecs),
 
-            Down | D => try_move_player(0, 1, &mut gs.ecs),
+            Down | S => try_move_player(0, 1, &mut gs.ecs),
 
             E => try_move_player(1, -1, &mut gs.ecs), //? NE
 
