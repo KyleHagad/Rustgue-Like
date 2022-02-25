@@ -80,10 +80,10 @@ impl BspDungeonBuilder {
             let room = self.rooms[i];
             let next_room = self.rooms[i+1];
             let (start_x, start_y, end_x, end_y) = (
-                room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1),
-                room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1),
-                next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1),
-                next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1),
+                room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))),
+                room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))),
+                next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))),
+                next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))),
             );
             self.draw_corridor(start_x, start_y, end_x, end_y);
             self.take_snapshot();
