@@ -15,7 +15,7 @@ pub struct SimpleMapBuilder {
 }
 
 impl MapBuilder for SimpleMapBuilder {
-    fn get_map(&mut self) -> Map { self.map.clone() }
+    fn get_map(&self) -> Map { self.map.clone() }
 
     fn get_starting_position(&self) -> Position { self.starting_position.clone() }
 
