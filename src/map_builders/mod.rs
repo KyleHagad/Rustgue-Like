@@ -2,7 +2,7 @@ use specs::prelude::*;
 use super::{
     Map, Rect, TileType, Position,
     spawner,
-    SHOW_MAPGEN_VISUALIZER,
+    SHOW_MAPGEN_VISUALIZER, MAPHEIGHT, MAPWIDTH,
 };
 mod simple_map;
 use simple_map::SimpleMapBuilder;
