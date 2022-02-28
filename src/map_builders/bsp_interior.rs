@@ -1,7 +1,7 @@
 use super::{
     Map, MapBuilder, Rect, TileType, Position,
     spawner, apply_room_to_map,
-    SHOW_MAPGEN_VISUALIZER, MAPWIDTH, MAPHEIGHT,
+    SHOW_MAPGEN_VISUALIZER,
 };
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
@@ -62,10 +62,10 @@ impl BspInteriorBuilder {
         let rects = self.rects.clone();
         for r in rects.iter() {
             let mut room = *r;
-            while room.x2 as usize >= MAPWIDTH-2 { room.x2 -= 1; }
+            while room.x2 >= self.map.width-2 { room.x2 -= 1; }
             // if room.x2 as usize == MAPWIDTH - 1 { room.x2 -= 1; }
             // else if room.x2 as usize == MAPWIDTH - 2 { room.x2 -= 2; }
-            while room.y2 as usize >= MAPHEIGHT-2 { room.y2 -= 1; }
+            while room.y2 >= self.map.height-2 { room.y2 -= 1; }
             // if room.y2 as usize == MAPHEIGHT - 1 { room.y2 -= 1; }
             // else if room.y2 as usize == MAPHEIGHT - 2 { room.y2 -= 2; }
             self.rooms.push(room);
