@@ -2,7 +2,7 @@ use specs::prelude::*;
 use super::{
     Map, Rect, TileType, Position,
     spawner,
-    SHOW_MAPGEN_VISUALIZER, MAPHEIGHT, MAPWIDTH,
+    SHOW_MAPGEN_VISUALIZER,
 };
 mod simple_map;
 use simple_map::SimpleMapBuilder;
@@ -24,7 +24,7 @@ pub trait MapBuilder {
 
 pub fn random_builder(new_depth : i32) -> Box<dyn MapBuilder> {
     let mut rng = rltk::RandomNumberGenerator::new();
-    let builder = rng.roll_dice(1,1);
+    let builder = rng.roll_dice(1,3);
     match builder {
         1 => Box::new(BspInteriorBuilder::new(new_depth)),
         2 => Box::new(BspDungeonBuilder::new(new_depth)),
