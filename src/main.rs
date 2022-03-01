@@ -110,21 +110,21 @@ impl GameState for State {//  GameState is a trait implemented on State
         systems::particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
-            RunState::MapGeneration => {
-                if !SHOW_MAPGEN_VISUALIZER { newrunstate = self.mapgen_next_state.unwrap(); }
+            // RunState::MapGeneration => {
+            //     if !SHOW_MAPGEN_VISUALIZER { newrunstate = self.mapgen_next_state.unwrap(); }
 
-                ctx.cls();
-                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+            //     ctx.cls();
+            //     draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
-                self.mapgen_timer += ctx.frame_time_ms;
-                if self.mapgen_timer > 300.0 {
-                    self.mapgen_timer = 0.0;
-                    self.mapgen_index += 1;
-                    if self.mapgen_index >= self.mapgen_history.len() {
-                        newrunstate = self.mapgen_next_state.unwrap();
-                    }
-                }
-            }
+            //     self.mapgen_timer += ctx.frame_time_ms;
+            //     if self.mapgen_timer > 300.0 {
+            //         self.mapgen_timer = 0.0;
+            //         self.mapgen_index += 1;
+            //         if self.mapgen_index >= self.mapgen_history.len() {
+            //             newrunstate = self.mapgen_next_state.unwrap();
+            //         }
+            //     }
+            // }
             RunState::MainMenu{ .. } => {}
             RunState::GameOver{ .. } => {}
             _ => {
