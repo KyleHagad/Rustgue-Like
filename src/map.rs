@@ -159,24 +159,45 @@ pub fn draw_map(map : &Map, ctx: &mut Rltk) {
 }
 
 fn wall_glyph(map : &Map, x: i32, y: i32) -> rltk::FontCharType {
-    if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 as i32 { return 219; }
+    // if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 as i32 { return 219; }
+    if x < 1 {
+        if y < 1 { return 201; }
+        if y > map.height - 2 { return 200; }
+        if is_revealed_and_wall(map, 1, y) { return 204; }
+        return 186;
+    }
+    if x > map.width - 2 {
+        if y < 1 { return 187; }
+        if y > map.height - 2 { return 188; }
+        if is_revealed_and_wall(map, map.width-2, y) { return 185; }
+        return 186;
+    }
+    if y < 1 {
+        if is_revealed_and_wall(map, x, 1) { return 203; }
+        return 205;
+    }
+    if y > map.height - 2 {
+        if is_revealed_and_wall(map, x, map.height-2) { return 202; }
+        return 205;
+    }
+
     let mut mask : u8 = 0;
 
-    if is_revealed_and_wall(map, x,y-1) { mask += 1; }
-    if is_revealed_and_wall(map, x,y+1) { mask += 2; }
-    if is_revealed_and_wall(map, x-1,y) { mask += 4; }
-    if is_revealed_and_wall(map, x+1,y) { mask += 8; }
+    if is_revealed_and_wall(map, x,y-1) { mask += 1; } // N
+    if is_revealed_and_wall(map, x,y+1) { mask += 2; } // S
+    if is_revealed_and_wall(map, x-1,y) { mask += 4; } // W
+    if is_revealed_and_wall(map, x+1,y) { mask += 8; } // E
 
     match mask {
-        0 => { 9 } // Pillar
-        1 => { 186 } // Wall to north
-        2 => { 186 } // wall to south
+        0 => { 10 } // Pillar
+        1 => { 10 } // Wall to north
+        2 => { 10 } // wall to south
         3 => { 186 } // wall to north and south
-        4 => { 205 } // wall to west
+        4 => { 10 } // wall to west
         5 => { 188 } // wall to north and west
         6 => { 187 } // wall to south and west
         7 => { 185 } // wall to north, south and west
-        8 => { 205 } // wall to east
+        8 => { 10 } // wall to east
         9 => { 200 } // wall to north and east
         10 => { 201 } // wall to south and east
         11 => { 204 } // wall to north, south and east
