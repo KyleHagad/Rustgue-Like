@@ -2,7 +2,7 @@ use rltk::RandomNumberGenerator;
 use specs::prelude::*;
 use std::collections::HashMap;
 use super::{
-    MapBuilder, Map, TileType::*, Position,
+    MapBuilder, Map, Position, TileType::*,
     spawner,
     SHOW_MAPGEN_VISUALIZER,
 };
@@ -61,7 +61,7 @@ impl CellularAutomataBuilder {
         }
         self.take_snapshot();
         // Iterate cell rules over the noise
-        for _i in 0..11 {
+        for _i in 0..15 {
             let mut new_tiles = self.map.tiles.clone();
 
             for y in 1..self.map.height-1 {
@@ -87,7 +87,7 @@ impl CellularAutomataBuilder {
             self.take_snapshot();
         }
 
-        self.starting_position = Position{ x: self.map.width/2, y: self.map.height/2 };
+        self.starting_position = Position{ x: self.map.width / 2, y: self.map.height / 2 };
         let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
         while self.map.tiles[start_idx] != Floor {
             self.starting_position.x -= 1;
@@ -98,10 +98,11 @@ impl CellularAutomataBuilder {
         let map_starts : Vec<usize> = vec![start_idx];
         let dijkstra_map = rltk::DijkstraMap::new(self.map.width as usize, self.map.height as usize, &map_starts, &self.map, 200.0);
         let mut exit_tile = (0, 0.0f32);
+        // let mut distances: Vec<f32> = Vec::new();
         for (i, tile) in self.map.tiles.iter_mut().enumerate() {
             if *tile == Floor {
                 let distance_to_start = dijkstra_map.map[i];
-
+                // distances.push(distance_to_start);
                 if distance_to_start == f32::MAX { *tile = Wall; }
                 else {
                     if distance_to_start > exit_tile.1 {
@@ -111,6 +112,8 @@ impl CellularAutomataBuilder {
                 }
             }
         }
+        // distances.sort_by(|a,b| a.partial_cmp(b).unwrap());
+        // rltk::log(format!("{:?}", distances[distances.len()-1]));
         self.take_snapshot();
 
         self.map.tiles[exit_tile.0] = DownStairs;
