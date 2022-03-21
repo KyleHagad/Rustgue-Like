@@ -52,7 +52,6 @@ fn room_table(map_depth: i32) -> RandomTable {
 }
 
 /// Fill a room
-#[allow(clippy::map_entry)]
 pub fn spawn_room(ecs: &mut World, room : &Rect, map_depth: i32) {
     let mut possible_targets : Vec<usize> = Vec::new();
     {
@@ -82,7 +81,8 @@ pub fn spawn_region(ecs: &mut World, area: &[usize], map_depth: i32) {
 
 
         for _i in 0 .. num_spawns {
-            let array_index = if areas.len() == 1 { 0usize } else { (rng.roll_dice(1, area.len() as i32) - 1) as usize};
+            let mut array_index = if areas.len() == 1 { 0usize } else { (rng.roll_dice(1, area.len() as i32) - 1) as usize };
+            if array_index >= areas.len() { array_index = (areas.len() - 1) as usize; }
             let map_idx = areas[array_index];
             spawn_points.insert(map_idx, spawn_table.roll(&mut rng));
             areas.remove(array_index);
